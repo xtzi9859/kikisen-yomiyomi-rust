@@ -451,9 +451,6 @@ async fn on_voice_state_update(
         return Ok(());
     };
 
-    let mut text_to_read = None;
-    let member_name = member.display_name();
-
     let get_channel_name = |chan_id: serenity::ChannelId| -> String {
         if let Some(guild) = ctx.cache.guild(guild_id) {
             if let Some(channel) = guild.channels.get(&chan_id) {
@@ -463,47 +460,51 @@ async fn on_voice_state_update(
         "不明なチャンネル".to_string()
     };
 
-    if old_channel_id == new_channel_id {
-        let old_stream = old.as_ref().and_then(|s| s.self_stream).unwrap_or(false);
-        let new_stream = new.self_stream.unwrap_or(false);
+    let member_name = member.display_name();
 
-        let old_video = old.as_ref().map(|s| s.self_video).unwrap_or(false);
-        let new_video = new.self_video;
-
-        if !old_stream && new_stream {
-            text_to_read = Some(format!("{}が配信を開始しました", member_name));
-        } else if !old_video && new_video {
-            text_to_read = Some(format!("{}がカメラをオンにしました", member_name));
+    let text_to_read = match (old_channel_id, new_channel_id) {
+        (None, Some(new_id)) => {
+            if new_id.get() == bot_channel_id.get() {
+                Some(format!("{}が参加しました", member_name))
+            } else {
+                let chan_name = get_channel_name(new_id);
+                Some(format!("{}が{}に参加しました", member_name, chan_name))
+            }
         }
-    } else {
-        match (old_channel_id, new_channel_id) {
-            (None, Some(new_id)) => {
-                if new_id.get() == bot_channel_id.into() {
-                    text_to_read = Some(format!("{}が参加しました", member_name));
+        (Some(old_id), None) => {
+            if old_id.get() == bot_channel_id.get() {
+                Some(format!("{}が退出しました", member_name))
+            } else {
+                let chan_name = get_channel_name(old_id);
+                Some(format!("{}が{}から退出しました", member_name, chan_name))
+            }
+        }
+        (Some(old_id), Some(new_id)) => {
+            if old_id == new_id {
+                let old_stream = old.as_ref().and_then(|s| s.self_stream).unwrap_or(false);
+                let new_stream = new.self_stream.unwrap_or(false);
+
+                let old_video = old.as_ref().map(|s| s.self_video).unwrap_or(false);
+                let new_video = new.self_video;
+
+                if !old_stream && new_stream {
+                    Some(format!("{}が配信を開始しました", member_name))
+                } else if !old_video && new_video {
+                    Some(format!("{}がカメラをオンにしました", member_name))
+                } else {
+                    None
+                }
+            } else {
+                if new_id.get() == bot_channel_id.get() {
+                    Some(format!("{}が参加しました", member_name))
                 } else {
                     let chan_name = get_channel_name(new_id);
-                    text_to_read = Some(format!("{}が{}に参加しました", member_name, chan_name));
+                    Some(format!("{}が{}に参加しました", member_name, chan_name))
                 }
             }
-            (Some(old_id), None) => {
-                if old_id.get() == bot_channel_id.into() {
-                    text_to_read = Some(format!("{}が退出しました", member_name));
-                } else {
-                    let chan_name = get_channel_name(old_id);
-                    text_to_read = Some(format!("{}が{}から退出しました", member_name, chan_name));
-                }
-            }
-            (Some(old_id), Some(new_id)) => {
-                if new_id.get() == bot_channel_id.into() {
-                    text_to_read = Some(format!("{}が参加しました", member_name));
-                } else {
-                    let chan_name = get_channel_name(new_id);
-                    text_to_read = Some(format!("{}が{}に参加しました", member_name, chan_name))
-                }
-            }
-            _ => {}
         }
-    }
+        _ => None
+    };
 
     if let Some(text) = text_to_read {
         play_voicevox(ctx, guild_id, &text).await?;
