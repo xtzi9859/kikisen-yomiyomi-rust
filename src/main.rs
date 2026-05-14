@@ -461,6 +461,7 @@ async fn on_voice_state_update(
     };
 
     let member_name = member.display_name();
+    let mut should_check_auto_disconnect = false;
 
     let text_to_read = match (old_channel_id, new_channel_id) {
         (None, Some(new_id)) => {
@@ -473,6 +474,7 @@ async fn on_voice_state_update(
         }
         (Some(old_id), None) => {
             if old_id.get() == bot_channel_id.get() {
+                should_check_auto_disconnect = true;
                 Some(format!("{}が退出しました", member_name))
             } else {
                 let chan_name = get_channel_name(old_id);
@@ -498,6 +500,7 @@ async fn on_voice_state_update(
                 if new_id.get() == bot_channel_id.get() {
                     Some(format!("{}が参加しました", member_name))
                 } else {
+                    should_check_auto_disconnect = true;
                     let chan_name = get_channel_name(new_id);
                     Some(format!("{}が{}に参加しました", member_name, chan_name))
                 }
@@ -508,6 +511,10 @@ async fn on_voice_state_update(
 
     if let Some(text) = text_to_read {
         play_voicevox(ctx, guild_id, &text).await?;
+    }
+
+    if !should_check_auto_disconnect {
+        return Ok(());
     }
 
     let member_count = {
