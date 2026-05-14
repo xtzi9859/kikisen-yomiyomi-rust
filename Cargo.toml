@@ -1,0 +1,23 @@
+[package]
+name = "kikisen-yomiyomi-rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+async-trait = "0.1.89"
+dotenvy = "0.15.7"
+emoji = { version = "0.2.1", features = ["ja"] }
+poise = "0.6.2"
+regex = "1.12.3"
+reqwest = "0.13.3"
+rustls = { version = "0.23.40", features = ["ring"] }
+serenity = "0.12.5"
+songbird = { version = "0.6.0", features = ["driver", "builtin-queue"] }
+symphonia = { version = "0.5.5", features = ["wav"] }
+tempfile = "3.27.0"
+tokio = { version = "1.52.3", features = ["full"] }
+tracing = "0.1.44"
+tracing-appender = "0.2.5"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
+unicode-segmentation = "1.13.2"
+urlencoding = "2.1.3"
