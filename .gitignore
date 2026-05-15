@@ -1,0 +1,6 @@
+Cargo.lock
+target
+.git
+.env
+examples
+voicevox_core
