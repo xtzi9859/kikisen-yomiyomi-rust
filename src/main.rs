@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use dotenvy::dotenv;
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::env;
 use std::sync::{Arc, LazyLock};
 use tempfile::Builder;
@@ -23,11 +23,29 @@ pub struct VoiceContextInfo {
 }
 struct Data {
     pub voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
+    music_state: Arc<RwLock<MusicState>>,
 }
 #[derive(Clone)]
 struct FileDeleter {
     _temp_file_path: Arc<tempfile::TempPath>,
 }
+#[allow(dead_code)]
+struct MusicItem {
+    url: String,
+    title: String,
+}
+struct MusicState {
+    queue: VecDeque<MusicItem>,
+    current_track: Option<songbird::tracks::TrackHandle>,
+    volume: f32,
+}
+struct MusicEndHandler {
+    ctx: serenity::Context,
+    guild_id: serenity::GuildId,
+    music_state: Arc<RwLock<MusicState>>,
+    voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>
+}
+
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -63,6 +81,21 @@ mod colors {
 #[async_trait]
 impl VoiceEventHandler for FileDeleter {
     async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
+        None
+    }
+}
+
+#[async_trait]
+impl VoiceEventHandler for MusicEndHandler {
+    async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
+        let ctx = self.ctx.clone();
+        let guild_id = self.guild_id;
+        let music_state = self.music_state.clone();
+        let voice_to_text_map = self.voice_to_text_map.clone();
+
+        tokio::spawn(async move {
+            let _ = play_next_music(&ctx, guild_id, music_state, voice_to_text_map).await;
+        });
         None
     }
 }
@@ -275,6 +308,58 @@ async fn play_voicevox(
     Ok(())
 }
 
+async fn play_next_music(
+    ctx: &serenity::Context,
+    guild_id: serenity::GuildId,
+    music_state: Arc<RwLock<MusicState>>,
+    voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>
+) -> Result<(), Error> {
+    let manager = songbird::get(ctx).await.expect("songbird error").clone();
+
+    if let Some(handler_lock) = manager.get(guild_id) {
+        let mut call = handler_lock.lock().await;
+        let vc_id = call.current_channel().map(|c| c.0);
+
+        let target_text_channel = if let Some(v_id) = vc_id {
+            let map = voice_to_text_map.read().await;
+            map.get(&serenity::ChannelId::from(v_id)).map(|info| info.command_channel)
+        } else {
+            None
+        };
+
+        let mut state = music_state.write().await;
+
+        if let Some(next_item) = state.queue.pop_front() {
+            let client = reqwest::Client::new();
+            let source = songbird::input::HttpRequest::new(client, next_item.url).into();
+            let track_handler = call.play(source);
+
+            let _ = track_handler.set_volume(state.volume);
+
+            let _ = track_handler.add_event(
+                Event::Track(TrackEvent::End), 
+                MusicEndHandler {
+                    ctx: ctx.clone(),
+                    guild_id,
+                    music_state: music_state.clone(),
+                    voice_to_text_map: voice_to_text_map.clone(),
+                },
+            );
+
+            state.current_track = Some(track_handler);
+            if let Some(channel) = target_text_channel {
+                let _ = channel.say(&ctx.http, format!("再生中: {}", next_item.title)).await;
+            }
+        } else {
+            state.current_track = None;
+            if let Some(channel) = target_text_channel {
+                let _ = channel.say(&ctx.http, "キューが空になりました").await;
+            }
+        }
+    }
+    Ok(())
+}
+
 #[poise::command(slash_command)]
 async fn restart(ctx: Context<'_>) -> Result<(), Error> {
     let embed = serenity::CreateEmbed::new()
@@ -307,12 +392,14 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
     let connect_channel_id = match user_voice_state.and_then(|v| v.channel_id) {
         Some(id) => id,
         None => {
-            ctx.send(poise::CreateReply::default()
-                .embed(serenity::CreateEmbed::new()
-                    .description("To use this command, you need to join a voice channel.")
-                    .color(colors::WARN)
-                )
-            ).await?;
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("To use this command, you need to join a voice channel.")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
             return Ok(());
         }
     };
@@ -332,16 +419,23 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
             let ctx_id = ctx.id();
             let move_button_id = format!("move{}", ctx_id);
 
-            let reply = ctx.send(poise::CreateReply::default()
-                .embed(serenity::CreateEmbed::new()
-                    .description("別のボイスチャンネルに既に参加しています。移動しますか？")
-                    .color(colors::WARN))
-                .components(vec![serenity::CreateActionRow::Buttons(vec![
-                    serenity::CreateButton::new(&move_button_id)
-                        .label("移動する")
-                        .style(serenity::ButtonStyle::Primary),
-                ])])
-            ).await?;
+            let reply = ctx
+                .send(
+                    poise::CreateReply::default()
+                        .embed(
+                            serenity::CreateEmbed::new()
+                                .description(
+                                    "別のボイスチャンネルに既に参加しています。移動しますか？",
+                                )
+                                .color(colors::WARN),
+                        )
+                        .components(vec![serenity::CreateActionRow::Buttons(vec![
+                            serenity::CreateButton::new(&move_button_id)
+                                .label("移動する")
+                                .style(serenity::ButtonStyle::Primary),
+                        ])]),
+                )
+                .await?;
 
             let interaction = reply
                 .message()
@@ -355,46 +449,67 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
             if let Some(mci) = interaction {
                 join_vc(ctx, guild_id, connect_channel_id).await?;
 
-                mci.create_response(&ctx.serenity_context(), serenity::CreateInteractionResponse::UpdateMessage((
-                    serenity::CreateInteractionResponseMessage::new()
-                        .embed(serenity::CreateEmbed::new()
-                            .description("ボイスチャンネルを移動しました")
-                            .color(colors::SUCCEED)
+                mci.create_response(
+                    &ctx.serenity_context(),
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        (serenity::CreateInteractionResponseMessage::new().embed(
+                            serenity::CreateEmbed::new()
+                                .description("ボイスチャンネルを移動しました")
+                                .color(colors::SUCCEED),
                         ))
-                    .components(vec![])
-                )).await?;
+                        .components(vec![]),
+                    ),
+                )
+                .await?;
             } else {
-                reply.edit(ctx, poise::CreateReply::default()
-                    .embed(serenity::CreateEmbed::new()
-                        .description("タイムアウトしました")
-                        .color(colors::INFO))
-                    .components(vec![])
-                ).await?;
+                reply
+                    .edit(
+                        ctx,
+                        poise::CreateReply::default()
+                            .embed(
+                                serenity::CreateEmbed::new()
+                                    .description("タイムアウトしました")
+                                    .color(colors::INFO),
+                            )
+                            .components(vec![]),
+                    )
+                    .await?;
             }
             return Ok(());
         }
     }
 
     join_vc(ctx, guild_id, connect_channel_id).await?;
-    ctx.send(poise::CreateReply::default()
-        .embed(serenity::CreateEmbed::new()
-            .description("ボイスチャンネルに参加しました")
-            .color(colors::SUCCEED)
-        )
-    ).await?;
+    ctx.send(
+        poise::CreateReply::default().embed(
+            serenity::CreateEmbed::new()
+                .description("ボイスチャンネルに参加しました")
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
 
     Ok(())
 }
 
-async fn join_vc(ctx: Context<'_>, guild_id: serenity::GuildId, channel_id: serenity::ChannelId) -> Result<(), Error> {
-    let manager = songbird::get(ctx.serenity_context()).await.expect("failed to initialize songbird");
+async fn join_vc(
+    ctx: Context<'_>,
+    guild_id: serenity::GuildId,
+    channel_id: serenity::ChannelId,
+) -> Result<(), Error> {
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
     let _handler = manager.join(guild_id, channel_id).await;
 
     let mut map = ctx.data().voice_to_text_map.write().await;
-    map.insert(channel_id, VoiceContextInfo {
-        command_channel: ctx.channel_id(),
-        text_channels: HashSet::new(),
-    });
+    map.insert(
+        channel_id,
+        VoiceContextInfo {
+            command_channel: ctx.channel_id(),
+            text_channels: std::collections::HashSet::from([ctx.channel_id()]),
+        },
+    );
 
     let bot_name = ctx.cache().current_user().name.clone();
     let text = format!("{}が参加しました", bot_name);
@@ -467,6 +582,53 @@ async fn on_message(
                 let reaction = serenity::ReactionType::Unicode("⏭️".to_string());
                 if let Err(why) = new_message.react(&ctx.http, reaction).await {
                     tracing::error!(?why, "failed to add reaction");
+                }
+            }
+        }
+        return Ok(());
+    }
+
+    if new_message.content == "!play" || new_message.content == "!p" {
+        if let Some(attachment) = new_message.attachments.first() {
+            let item = MusicItem {
+                url: attachment.url.clone(),
+                title: attachment.filename.clone(),
+            };
+
+            let should_play = {
+                let mut state = data.music_state.write().await;
+                state.queue.push_back(item);
+                state.current_track.is_none()
+            };
+
+            let _ = new_message.channel_id.say(&ctx.http, format!("キューに追加しました: {}", attachment.filename)).await;
+
+            if should_play {
+                play_next_music(ctx, guild_id, data.music_state.clone(), data.voice_to_text_map.clone()).await?;
+            }
+        }
+    }
+
+    if new_message.content == "!skip" || new_message.content == "!s" {
+        let state = data.music_state.read().await;
+        if let Some(handle) = &state.current_track {
+            let _ = handle.stop();
+            let _ = new_message.channel_id.say(&ctx.http, "スキップしました").await;
+        }
+        return Ok(());
+    }
+    if new_message.content.starts_with("!volume") || new_message.content.starts_with("!vol") {
+        let parts: Vec<&str> = new_message.content.split_whitespace().collect();
+
+        if parts.len() >= 2{
+            if let Ok(vol_input) = parts[1].parse::<f32>() {
+                let actual_vol = vol_input / 100.0;
+                let mut state = data.music_state.write().await;
+                state.volume = actual_vol;
+
+                if let Some(handle) = &state.current_track {
+                    let _ = handle.set_volume(actual_vol);
+                    let _ = new_message.channel_id.say(&ctx.http, format!("音量を`{}`に設定しました", actual_vol)).await;
                 }
             }
         }
@@ -672,6 +834,11 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     voice_to_text_map: Arc::new(RwLock::new(HashMap::new())),
+                    music_state: Arc::new(RwLock::new(MusicState {
+                        queue: std::collections::VecDeque::new(),
+                        current_track: None,
+                        volume: 0.1,
+                    })),
                 })
             })
         })

@@ -1,0 +1,1022 @@
+2026-05-15T07:22:11.965119Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:22:12.527384Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:22:12.831107Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:22:13.577987Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:22:41.031143Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:22:41.073381Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:22:41.073515Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:22:41.585407Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:22:41.586047Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:22:41.586089Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:22:41.586276Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:22:41.586324Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:22:41.586407Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:22:41.606430Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:22:41.626330Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:22:44.706368Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:22:44.706511Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: e6a9f6d2-6c45-466d-8aa6-e068699100eb, data: Any { .. } } })]).
+2026-05-15T07:22:44.706602Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:22:44.706696Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:22:44.806583Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:24:32.836037Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:24:33.555819Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:24:33.849806Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:24:34.488364Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:24:39.410277Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:24:39.447546Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:24:39.448049Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:24:39.830979Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:24:39.831993Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:24:39.832155Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:24:39.832526Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:24:39.832628Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:24:39.832687Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:24:39.852190Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:24:39.872351Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:24:42.952308Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:24:42.952443Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 10d94563-c907-47ad-ab84-614eab21b93b, data: Any { .. } } })]).
+2026-05-15T07:24:42.952533Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:24:42.952622Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:24:43.052493Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:25:36.594627Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:25:37.188557Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:25:37.458900Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:25:38.398123Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:25:41.867840Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:25:41.905912Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:25:41.906042Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:25:42.363942Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:25:42.364821Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:25:42.364910Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:25:42.365415Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:25:42.365532Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:25:42.365642Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:25:42.385021Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:25:42.405046Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:25:45.485111Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:25:45.485234Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: f96e539e-0311-49cb-b569-be429cc8a26b, data: Any { .. } } })]).
+2026-05-15T07:25:45.485320Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:25:45.485404Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:25:45.586025Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:26:58.739477Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:26:58.781390Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: c-nrt14-611ff0f6.discord.media:2083
+2026-05-15T07:26:58.781535Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:26:59.185533Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:26:59.186377Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:26:59.186448Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:26:59.186492Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:26:59.186530Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:26:59.186561Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:26:59.206584Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:26:59.226767Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:27:02.306593Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:27:02.306711Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 2834090d-be84-48b9-85fd-7ab5dd64c55d, data: Any { .. } } })]).
+2026-05-15T07:27:02.306771Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:27:02.306853Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:27:02.406740Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:27:12.470338Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:27:12.471680Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:27:12.471694Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:27:12.472938Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Disconnected
+2026-05-15T07:30:46.450201Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:30:47.010054Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:30:47.282357Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:30:47.900823Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:31:05.135576Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:31:05.188423Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:31:05.188537Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:31:05.636861Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:31:05.637583Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:31:05.637892Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:31:05.638104Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:31:05.638185Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:31:05.638228Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:31:05.658001Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:31:05.678038Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:31:08.758022Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:31:08.758140Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 5b3a3dfa-0b5b-42fd-8b13-7ce59213db14, data: Any { .. } } })]).
+2026-05-15T07:31:08.758235Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:31:08.758328Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:31:08.858161Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:31:10.315522Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:31:10.316063Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:31:10.316102Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:31:10.337913Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:31:10.338043Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:31:10.338115Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:31:10.357917Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:31:10.378013Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:31:11.358002Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:31:11.358134Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 980ms, play_time: 980ms, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 3bbcf431-d418-4ae9-82a2-914709dfbc93, data: Any { .. } } })]).
+2026-05-15T07:31:11.358227Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:31:11.358320Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:31:11.458232Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:31:26.424861Z  INFO kikisen_yomiyomi_rust: !play detected
+2026-05-15T07:31:26.424948Z  INFO kikisen_yomiyomi_rust: attachment detected
+2026-05-15T07:31:26.424998Z  INFO kikisen_yomiyomi_rust: should_play
+2026-05-15T07:31:26.469329Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:31:26.469373Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:31:26.498219Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:31:26.518016Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:31:26.518073Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:31:26.518127Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T07:31:26.518188Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:31:26.814840Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:31:26.815368Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:31:26.815336Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:31:26.837909Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:31:26.838006Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:31:26.838076Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:31:26.857855Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:31:26.877845Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:31:29.498042Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:31:29.498192Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 22882348-6f37-4ba7-b948-640cc7b22884, data: Any { .. } } })]).
+2026-05-15T07:31:29.498285Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:31:29.498377Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:31:29.598293Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:32:08.086185Z  INFO kikisen_yomiyomi_rust: !play detected
+2026-05-15T07:32:08.086275Z  INFO kikisen_yomiyomi_rust: attachment detected
+2026-05-15T07:32:08.473763Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:32:08.474342Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:32:08.474363Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:32:08.498051Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:32:08.498178Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:32:08.498257Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:32:08.517865Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:32:08.537946Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:32:11.157878Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:32:11.157987Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 34320f30-3708-4a79-be10-782936300a26, data: Any { .. } } })]).
+2026-05-15T07:32:11.158080Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:32:11.158167Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:32:11.258130Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:32:50.936763Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:32:51.548293Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:32:51.877603Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:32:52.691912Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:33:13.237973Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:33:13.278611Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:33:13.278706Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:33:13.649082Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:33:13.650321Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:33:13.651159Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:33:13.651363Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:33:13.651456Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:33:13.651559Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:33:13.670509Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:33:13.690608Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:33:16.770598Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:33:16.770726Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 7e131525-6e4e-480c-b3a7-46e80a24ca41, data: Any { .. } } })]).
+2026-05-15T07:33:16.770772Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:33:16.770820Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:33:16.870831Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:33:19.798091Z  INFO kikisen_yomiyomi_rust: !play detected
+2026-05-15T07:33:19.798188Z  INFO kikisen_yomiyomi_rust: attachment detected
+2026-05-15T07:33:19.798244Z  INFO kikisen_yomiyomi_rust: should play: true
+2026-05-15T07:33:19.798285Z  INFO kikisen_yomiyomi_rust: should_play
+2026-05-15T07:33:19.867873Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:33:19.867909Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:33:19.890498Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:33:19.910597Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:33:19.910743Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:33:19.910755Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T07:33:19.910862Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:33:20.180627Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:33:20.181162Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:33:20.181175Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:33:20.210945Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:33:20.211048Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:33:20.211116Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:33:20.230497Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:33:20.250637Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:33:22.870650Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:33:22.870790Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 78092613-dcfc-4cbf-9b81-37df3237a917, data: Any { .. } } })]).
+2026-05-15T07:33:22.870882Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:33:22.870971Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:33:22.970649Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:42:46.345992Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:42:46.978098Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:42:47.266942Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:42:48.122524Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:43:18.870091Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:43:18.909219Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:43:18.909308Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:43:19.643441Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:43:19.646038Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:43:19.646697Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:43:19.646895Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:43:19.646953Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:43:19.647020Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:43:19.666725Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:43:19.686776Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:43:22.766929Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:43:22.767135Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 3cbbbea6-803d-4a62-b2bf-0aac517de578, data: Any { .. } } })]).
+2026-05-15T07:43:22.767228Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:43:22.767316Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:43:22.867272Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:43:27.871039Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:43:27.871478Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:43:27.906864Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:43:28.202653Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:43:28.206704Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:43:28.226917Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:43:28.227018Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:43:28.227086Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:43:28.246820Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:43:28.266892Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:43:28.306704Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:43:30.886983Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T07:43:30.887121Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: cb0c679d-ad73-41a1-8e1a-fb474f8d2285, data: Any { .. } } })]).
+2026-05-15T07:43:30.887211Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:43:30.887297Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T07:43:37.847172Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:43:37.866885Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:43:37.886796Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:43:37.886895Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:43:37.886958Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:43:37.906775Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:43:37.926852Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:43:38.906857Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T07:43:38.906977Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 980ms, play_time: 980ms, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: f7adef4b-d0c6-4caf-9a2b-5998af89f579, data: Any { .. } } })]).
+2026-05-15T07:43:38.907067Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:43:38.907153Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T07:43:47.713170Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Disconnected
+2026-05-15T07:44:56.072633Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:44:56.709782Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:44:57.024968Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:44:57.720797Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:46:02.358525Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:46:02.407757Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:46:02.407893Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:46:02.871397Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:46:02.873046Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:46:02.873657Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:46:02.873938Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:46:02.874003Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:46:02.874072Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:46:02.893853Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:46:02.913879Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:46:05.994863Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:46:05.995094Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 028b0ad3-2ffc-4d53-bbd7-68259a108a12, data: Any { .. } } })]).
+2026-05-15T07:46:05.995228Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:46:05.995314Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:46:06.094079Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:46:09.242567Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:46:09.242650Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:46:09.273845Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:46:09.519963Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:46:09.534381Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:46:09.553860Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:09.553974Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:09.554046Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:46:09.573782Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:46:09.593870Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:46:09.733803Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:46:12.213891Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T07:46:12.214010Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 26ab5661-1a8f-4374-9102-755d6209c74b, data: Any { .. } } })]).
+2026-05-15T07:46:12.214074Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:46:12.214168Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T07:46:24.678831Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:46:24.695181Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:46:24.713810Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:24.713913Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:24.714008Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:46:24.733841Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:46:24.753937Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:46:27.854104Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T07:46:27.854226Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.1s, play_time: 3.1s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: e996f22e-08d6-4ee9-a1c6-470330449226, data: Any { .. } } })]).
+2026-05-15T07:46:27.854313Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:46:27.854401Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T07:46:36.229811Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:46:36.233832Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:46:36.253961Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:36.254089Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:36.254159Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:46:36.274079Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:46:36.293882Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:46:38.913850Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T07:46:38.914004Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: a67c79a9-1080-4c6c-a939-fd12e7d9a769, data: Any { .. } } })]).
+2026-05-15T07:46:38.914093Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:46:38.914156Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T07:46:44.474311Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Disconnected
+2026-05-15T07:46:48.228658Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:46:48.268824Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:46:48.268928Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:46:48.269517Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:46:48.723589Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:46:48.733909Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:46:48.754006Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:48.754128Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:46:48.754202Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:46:48.773896Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:46:48.793851Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:46:51.730889Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Disconnected
+2026-05-15T07:46:54.435042Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:46:55.109841Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:46:55.399150Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:46:56.132023Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:47:13.766566Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:47:13.806991Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:47:13.807248Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:47:14.170050Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:47:14.171447Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:47:14.171606Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:47:14.171862Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:47:14.171953Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:47:14.172029Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:47:14.191640Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:47:14.211709Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:47:17.291637Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:47:17.291767Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 2acdb5d9-9877-4881-8065-7677214e030f, data: Any { .. } } })]).
+2026-05-15T07:47:17.291859Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:47:17.291949Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:47:17.391863Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:48:02.912825Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:48:02.912785Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:48:02.951631Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:48:03.284438Z ERROR symphonia_core::probe: probe reach EOF at 262895 bytes.
+2026-05-15T07:48:03.295807Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:48:03.311649Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T07:48:03.311763Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:48:03.311804Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:48:03.311855Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:48:03.331794Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:48:03.331931Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:48:03.332014Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:48:03.351593Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:48:03.371684Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:48:05.991685Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:48:05.991826Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 01fdaac7-3b2d-4687-9b70-38c878e20544, data: Any { .. } } })]).
+2026-05-15T07:48:05.991923Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:48:05.992019Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:48:06.091925Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:48:08.725904Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:48:08.727621Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:48:08.727733Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:48:08.752148Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:48:08.752267Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:48:08.752345Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:48:08.771686Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:48:08.791819Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:48:11.412613Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:48:11.413096Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: a1655de1-7ced-4cad-bbe7-53baade9aeb4, data: Any { .. } } })]).
+2026-05-15T07:48:11.413171Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:48:11.413246Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:48:11.511839Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:49:21.597975Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:49:21.599485Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:49:21.599571Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:49:21.599751Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:49:21.599836Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:49:21.600036Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:49:21.619794Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:49:21.639807Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:49:24.259814Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:49:24.259937Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: ed39a23c-f9e6-426d-9a5d-cbd9b8bd11fe, data: Any { .. } } })]).
+2026-05-15T07:49:24.260001Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:49:24.260086Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:49:24.359978Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:49:56.137332Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:49:56.142746Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:49:56.142759Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:49:56.179865Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:49:56.179970Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:49:56.180038Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:49:56.199847Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:49:56.219779Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:49:58.839737Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:49:58.839858Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: f8895468-c33f-4ce6-ab94-a0b567779e52, data: Any { .. } } })]).
+2026-05-15T07:49:58.839943Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:49:58.840029Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:49:58.940027Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:50:10.833481Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T07:50:11.442606Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T07:50:11.731412Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T07:50:12.410979Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T07:50:17.960655Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T07:50:18.006298Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T07:50:18.006412Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T07:50:18.330057Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:50:18.331998Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:50:18.332074Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:50:18.332659Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:50:18.332771Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:50:18.332875Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:50:18.353063Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:50:18.372229Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:50:21.452280Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:50:21.452417Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: e0bf9953-2bcf-4b64-936d-3bfc6e173284, data: Any { .. } } })]).
+2026-05-15T07:50:21.452505Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:50:21.452566Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:50:21.552294Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:50:25.478831Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:50:25.480218Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:50:25.480261Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:50:25.512180Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:50:25.512289Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T07:50:25.512338Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:50:25.532422Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:50:25.552170Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:50:26.127990Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:50:26.132966Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:50:26.152156Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:50:26.152257Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:50:28.394815Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:50:28.395027Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.84s, play_time: 2.84s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: c98585c9-827c-47eb-90b8-7ede51e63e48, data: Any { .. } } })]).
+2026-05-15T07:50:28.395122Z  INFO runner: songbird::tracks::queue: 1 tracks remain.
+2026-05-15T07:50:28.395216Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T07:50:28.412277Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T07:50:28.432666Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:50:28.452220Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:50:30.532467Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T07:50:30.532641Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.08s, play_time: 2.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: ddeac141-cfc2-4500-a154-2720346f5061, data: Any { .. } } })]).
+2026-05-15T07:50:30.532739Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:50:30.532842Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T07:50:30.632684Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T07:50:40.966269Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T07:50:40.966489Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T07:50:40.992272Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T07:50:41.272134Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T07:50:41.275207Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T07:50:41.292090Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T07:50:41.312160Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:50:41.312253Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T07:50:41.312303Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T07:50:41.332323Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T07:50:41.352202Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T07:50:43.972345Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T07:50:43.972487Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 017c11a7-14a8-429a-9770-17203041c109, data: Any { .. } } })]).
+2026-05-15T07:50:43.972565Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T07:50:43.972599Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:00:15.934939Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T08:00:16.452071Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T08:00:16.751688Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T08:00:19.280412Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T08:00:25.079071Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T08:00:25.125470Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T08:00:25.125589Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T08:00:25.878812Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:00:25.880213Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:00:25.880281Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:00:25.880550Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:00:25.880640Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:00:25.880732Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:00:25.900529Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:00:25.920553Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:00:28.816206Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:00:28.820374Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:00:28.840613Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:28.840727Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:29.000687Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:00:29.000863Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: d3d8c9b4-b8ba-4b01-9310-ca46d5f81227, data: Any { .. } } })]).
+2026-05-15T08:00:29.000964Z  INFO runner: songbird::tracks::queue: 1 tracks remain.
+2026-05-15T08:00:29.001074Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T08:00:29.020554Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:00:29.040657Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:00:29.060606Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:00:29.799319Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:00:29.820467Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:00:29.840579Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:29.840693Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:30.040578Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:00:30.040702Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 980ms, play_time: 980ms, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: ec6bafb0-b03a-41e6-b83d-2fd6f568d8c7, data: Any { .. } } })]).
+2026-05-15T08:00:30.040786Z  INFO runner: songbird::tracks::queue: 1 tracks remain.
+2026-05-15T08:00:30.040875Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T08:00:30.060485Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:00:30.080624Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:00:30.100811Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:00:30.600709Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:00:30.601063Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 500ms, play_time: 500ms, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 0be38fc8-79c2-4656-a44c-33bc9235afa2, data: Any { .. } } })]).
+2026-05-15T08:00:30.601711Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:00:30.601815Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:00:30.700720Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:00:43.209692Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:00:43.209735Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:00:43.240488Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:00:43.240637Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:00:43.639108Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:00:43.660652Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:00:43.680608Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:43.680720Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:43.680952Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:00:43.700733Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:00:43.700871Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:00:43.720602Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:00:46.625103Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:00:46.625241Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 3c0e28f0-f34e-4f5e-a398-da3eee3769bf, data: Any { .. } } })]).
+2026-05-15T08:00:46.625307Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:00:46.625374Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:00:53.271429Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:00:53.280777Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:00:53.300652Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:53.300758Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:00:53.300827Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:00:53.320569Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:00:53.341236Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:00:55.960943Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:00:55.961290Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: df1c96eb-c59d-4512-beb3-d5965b38d853, data: Any { .. } } })]).
+2026-05-15T08:00:55.962472Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:00:55.962854Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:00:57.600597Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:00:57.629396Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:00:57.641371Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:00:57.660593Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:00:57.660717Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:00:57.760675Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:01:00.740490Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:01:00.740624Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:01:00.840719Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:07:02.167337Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T08:07:02.935844Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T08:07:03.215535Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T08:07:03.899970Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T08:07:09.440809Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T08:07:09.482386Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T08:07:09.482539Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T08:07:09.911220Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:07:09.913501Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:07:09.913533Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:07:09.913736Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:07:09.913823Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:07:09.913873Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:07:09.934007Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:07:09.953848Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:07:13.034057Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:07:13.034218Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 3376642d-fa77-4fa6-af2b-f3b88666da73, data: Any { .. } } })]).
+2026-05-15T08:07:13.034321Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:07:13.034421Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:07:13.134235Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:07:13.580430Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:07:13.581735Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:07:13.581884Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:07:13.613787Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:07:13.613894Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:07:13.613980Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:07:13.633957Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:07:13.653855Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:07:14.634064Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:07:14.634209Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 980ms, play_time: 980ms, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 61fcf86e-ad8d-4ba3-89d6-8891ea7e1071, data: Any { .. } } })]).
+2026-05-15T08:07:14.634276Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:07:14.634367Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:07:14.734125Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:07:34.842003Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:07:34.842045Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:07:34.874072Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:07:34.874205Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:07:35.167025Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:07:35.173735Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:07:35.193889Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:07:35.194024Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:07:35.194098Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:07:35.213959Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:07:35.233905Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:07:35.290267Z  INFO symphonia_format_mkv::codecs: unknown codec: V_AV1
+2026-05-15T08:07:35.314006Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:07:38.853954Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:07:38.855543Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.62s, play_time: 3.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 1cc02101-3d07-4280-808e-49a3e1598e66, data: Any { .. } } })]).
+2026-05-15T08:07:38.855621Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:07:38.855693Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:07:44.705268Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:07:44.713797Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:07:44.734066Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:07:44.734202Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:07:44.734284Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:07:44.753917Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:07:44.773875Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:07:48.394000Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:07:48.394143Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.62s, play_time: 3.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 4d962cf8-8507-4c89-8a72-1357e7dfdea5, data: Any { .. } } })]).
+2026-05-15T08:07:48.394234Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:07:48.394324Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:07:51.253884Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:07:51.280332Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:07:51.293976Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:07:51.313740Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:07:51.313836Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:07:51.986429Z  INFO symphonia_format_mkv::codecs: unknown codec: V_MPEG4/ISO/AVC
+2026-05-15T08:07:52.013833Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:07:52.013943Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:07:52.014002Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T08:07:52.014090Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:08:16.587662Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:08:16.587680Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:08:16.613798Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:08:16.613920Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:08:16.901412Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:08:16.913871Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:08:16.933827Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:08:16.933942Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:08:16.934013Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:08:16.953905Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:08:16.973902Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:08:17.055854Z  INFO symphonia_format_mkv::codecs: unknown codec: V_MPEG4/ISO/AVC
+2026-05-15T08:08:17.094001Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:08:17.094165Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T08:08:17.094255Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T08:08:20.593819Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:08:20.593968Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.62s, play_time: 3.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: feb0806a-d1e2-40f6-8ce7-f446bec02d61, data: Any { .. } } })]).
+2026-05-15T08:08:20.594057Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:08:20.594141Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:08:20.694809Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:12:41.413513Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T08:12:42.008127Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T08:12:42.294556Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T08:12:43.120711Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T08:12:57.733365Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T08:12:57.777981Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T08:12:57.778168Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T08:12:58.130077Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:12:58.131096Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:12:58.131447Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:12:58.131679Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:12:58.131760Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:12:58.131821Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:12:58.152479Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:12:58.171634Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:13:01.252506Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:13:01.252634Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: e26a4971-d177-4adc-8676-7a9f3118d63e, data: Any { .. } } })]).
+2026-05-15T08:13:01.252721Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:13:01.252810Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:13:01.351680Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:13:03.850204Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:13:03.850237Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:13:03.872373Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:13:03.872509Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:13:04.144351Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:13:04.151582Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:13:04.171575Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:13:04.171673Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:13:04.171738Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:13:04.191602Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:13:04.211650Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:13:04.756037Z ERROR symphonia_core::probe: reached probe limit of 1048576 bytes.
+2026-05-15T08:13:04.791823Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T08:13:04.791935Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:13:04.792085Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T08:13:07.831980Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:13:07.832138Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.62s, play_time: 3.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 8a39810a-c47e-4d47-afb3-5e2541fa037d, data: Any { .. } } })]).
+2026-05-15T08:13:07.832182Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:13:07.832246Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:13:07.932117Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:14:38.427722Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:14:38.428811Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:14:38.428890Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:14:38.429039Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:14:38.429121Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:14:38.429187Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:14:38.449310Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:14:38.469141Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:14:39.729246Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:14:39.729383Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 1.26s, play_time: 1.26s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: ac44bf1a-4d4e-434e-ae3a-39de440680a8, data: Any { .. } } })]).
+2026-05-15T08:14:39.729445Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:14:39.729508Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:14:39.829636Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:19:04.141497Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T08:19:04.759151Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T08:19:05.056533Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T08:19:05.732469Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T08:19:10.932566Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T08:19:10.971861Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T08:19:10.972018Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T08:19:11.330431Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:19:11.332807Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:19:11.333544Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:19:11.333953Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:19:11.334055Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:19:11.334109Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:19:11.353723Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:19:11.373915Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:19:14.453802Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:19:14.454069Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: f6ab96e0-ffa4-489d-bb58-c776cf1b6c30, data: Any { .. } } })]).
+2026-05-15T08:19:14.454160Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:19:14.454222Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:19:14.553877Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:19:16.834470Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:19:16.834903Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:19:16.873771Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:19:16.873906Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:19:17.211650Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:19:17.213588Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:19:17.233747Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:19:17.233836Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:19:17.233875Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:19:17.253697Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:19:17.267508Z  INFO symphonia_format_mkv::codecs: unknown codec: V_MPEG4/ISO/AVC
+2026-05-15T08:19:17.273710Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:19:17.293909Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T08:19:17.294062Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:19:17.294155Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T08:19:20.893691Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:19:20.893815Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.62s, play_time: 3.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 20bdcfb9-57d0-4741-9363-1c39e9f8c95c, data: Any { .. } } })]).
+2026-05-15T08:19:20.893902Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:19:20.893997Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:19:20.993837Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:20:00.282622Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:20:00.282643Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:20:00.313657Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:20:00.313771Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:20:00.614115Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:20:00.629499Z ERROR symphonia_core::probe: reached probe limit of 1048576 bytes.
+2026-05-15T08:20:00.633858Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:20:00.653651Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:20:00.653753Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:20:00.653825Z  INFO runner: songbird::events::store: Firing Error for [0]
+2026-05-15T08:20:00.653909Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:20:00.654003Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:20:00.654103Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T08:20:00.673677Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:20:00.693777Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:20:04.573808Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:20:04.573965Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.88s, play_time: 3.88s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 25f51ae7-1095-493a-9f2c-a8dda2ca65ae, data: Any { .. } } })]).
+2026-05-15T08:20:04.574033Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:20:04.574119Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:20:04.673976Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:20:49.443647Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T08:20:50.017048Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T08:20:50.301204Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T08:20:51.138807Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T08:20:56.521862Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T08:20:56.567702Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: japan13002.discord.media:443
+2026-05-15T08:20:56.567857Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T08:20:56.957855Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:20:56.959228Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:20:56.959382Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:20:56.959465Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:20:56.959542Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:20:56.959606Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:20:56.979462Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:20:56.999761Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:21:00.079575Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:21:00.079737Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: c630d06c-5817-40b3-89b2-0074cafd04f8, data: Any { .. } } })]).
+2026-05-15T08:21:00.079832Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:21:00.079902Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:21:00.179692Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:21:26.336171Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:21:26.336266Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:21:26.359768Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:21:26.360040Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:21:26.659338Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:21:26.670220Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:21:26.679422Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:21:26.699755Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:21:26.699887Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:21:26.699956Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:21:26.719456Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:21:26.739420Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:21:30.619514Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:21:30.619620Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.88s, play_time: 3.88s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 4b0a480b-582d-46e2-acf5-96a5f52abbf2, data: Any { .. } } })]).
+2026-05-15T08:21:30.619674Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:21:30.619762Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:21:53.083298Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:21:53.099503Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:21:53.119368Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:21:53.119467Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:21:53.119531Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:21:53.139423Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:21:53.159496Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:21:57.039481Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:21:57.039623Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.88s, play_time: 3.88s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: d611572c-cc40-4d82-9afe-bcd6b241e186, data: Any { .. } } })]).
+2026-05-15T08:21:57.039669Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:21:57.039719Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:26:18.659428Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:26:18.659557Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:26:18.699438Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:26:18.719276Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:26:18.719391Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:26:19.519830Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:26:51.425264Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:26:51.439596Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:26:51.459388Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:26:51.459490Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:26:51.459557Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:26:51.479504Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:26:51.499725Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:26:53.459504Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:26:53.459662Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 1.96s, play_time: 1.96s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 952b0a35-b2c5-4724-8e28-6b8b87f03820, data: Any { .. } } })]).
+2026-05-15T08:26:53.459751Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:26:53.459811Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:30:42.519429Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:30:42.519680Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:30:42.619639Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:33:21.083671Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:33:21.083927Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:33:21.084498Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:33:21.084614Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:33:21.424320Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:33:21.444005Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:33:21.464189Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:33:21.464324Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:33:21.464384Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:33:21.484041Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:33:21.504054Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:33:21.624058Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:33:25.384102Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:33:25.384244Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.88s, play_time: 3.88s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 184a2b53-2929-4a84-a430-14c54bca6044, data: Any { .. } } })]).
+2026-05-15T08:33:25.384352Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:33:25.384449Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:34:46.989355Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:34:47.004305Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:34:47.024104Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:34:47.024207Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:34:47.024260Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:34:47.044075Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:34:47.064061Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:34:54.924069Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:34:54.924199Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 7.86s, play_time: 7.86s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 259d6572-72f9-425b-b7b9-9be4b4d654e8, data: Any { .. } } })]).
+2026-05-15T08:34:54.924288Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:34:54.924378Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:36:50.575996Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:36:50.584045Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:36:50.604113Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:36:50.604231Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:36:50.604306Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:36:50.624193Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:36:50.644098Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:36:54.524267Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:36:54.524427Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.88s, play_time: 3.88s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: e7cfb871-5437-4e63-9528-12886c134e1a, data: Any { .. } } })]).
+2026-05-15T08:36:54.524521Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:36:54.524617Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:38:26.424044Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:38:26.424152Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:38:26.464027Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:38:26.484002Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:38:26.484120Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:38:26.964204Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:41:09.544099Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:41:09.544300Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:41:09.644503Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:48:14.724758Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:48:14.724854Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:48:14.725206Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:48:14.725302Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:48:15.229223Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:48:15.244965Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T08:48:15.265217Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:48:15.265334Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T08:48:15.265404Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T08:48:15.284890Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T08:48:15.305043Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T08:48:16.565443Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:48:19.185167Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T08:48:19.185353Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.88s, play_time: 3.88s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 0ab3eea7-0f96-471a-be23-1a5aebf8faba, data: Any { .. } } })]).
+2026-05-15T08:48:19.185530Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:48:19.185620Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T08:50:50.645351Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:50:50.645501Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:50:50.745385Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:59:04.611247Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:59:04.612822Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:59:04.612935Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:59:04.613310Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:59:04.613400Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:59:04.613487Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:59:04.633292Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:59:04.653205Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:59:07.773272Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:59:07.773410Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.12s, play_time: 3.12s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 44695146-ed26-44c6-9044-cee432baa305, data: Any { .. } } })]).
+2026-05-15T08:59:07.773497Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:59:07.773607Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:59:07.873303Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T08:59:16.927405Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T08:59:16.928602Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T08:59:16.928684Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T08:59:16.953214Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:59:16.953323Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T08:59:16.953386Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T08:59:16.973242Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T08:59:16.993191Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T08:59:17.954371Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T08:59:17.955132Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 960ms, play_time: 960ms, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 1cda9829-a711-4199-be15-06d837a3b84e, data: Any { .. } } })]).
+2026-05-15T08:59:17.955591Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T08:59:17.956174Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T08:59:18.053568Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T09:07:01.181052Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:07:01.182268Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T09:07:01.182747Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T09:07:01.182901Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:07:01.182968Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:07:01.183035Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T09:07:01.202951Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:07:01.222924Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:07:01.828575Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:07:01.843047Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T09:07:01.863001Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:07:01.863103Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:07:03.223021Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:07:03.223149Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2s, play_time: 2s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 532098e6-ff29-4ee6-9fb7-9b9c435390a5, data: Any { .. } } })]).
+2026-05-15T09:07:03.223212Z  INFO runner: songbird::tracks::queue: 1 tracks remain.
+2026-05-15T09:07:03.223307Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T09:07:03.243061Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T09:07:03.262909Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:07:03.283030Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:07:03.360112Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:07:03.362885Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T09:07:03.383015Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:07:03.383131Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:07:06.547721Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:07:06.562989Z  INFO runner: songbird::driver::tasks::events: Event state for track 3 added
+2026-05-15T09:07:06.582973Z  INFO runner: songbird::driver::tasks::events: Adding event to track 2.
+2026-05-15T09:07:06.583076Z  INFO runner: songbird::driver::tasks::events: Adding event to track 2.
+2026-05-15T09:07:06.883008Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:07:06.883134Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.6s, play_time: 3.6s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: d62b60ab-85cd-4f7f-8874-4e046886435d, data: Any { .. } } })]).
+2026-05-15T09:07:06.883220Z  INFO runner: songbird::tracks::queue: 2 tracks remain.
+2026-05-15T09:07:06.883312Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 3 removed.
+2026-05-15T09:07:06.903028Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T09:07:06.923105Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T09:07:06.943041Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T09:07:09.183129Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T09:07:09.183272Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.24s, play_time: 2.24s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: b7fa9e23-59f2-4f34-9932-340b2b4c2577, data: Any { .. } } })]).
+2026-05-15T09:07:09.183362Z  INFO runner: songbird::tracks::queue: 1 tracks remain.
+2026-05-15T09:07:09.183457Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T09:07:09.202994Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T09:07:09.223053Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:07:09.243135Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:07:11.383047Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:07:11.383168Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.14s, play_time: 2.14s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 6599e8fe-6281-48d0-b30a-5aff526db1d6, data: Any { .. } } })]).
+2026-05-15T09:07:11.383252Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T09:07:11.383335Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T09:07:11.483167Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T09:07:13.976740Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:07:13.981568Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T09:07:13.982210Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T09:07:14.003041Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:07:14.003143Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:07:14.003208Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T09:07:14.023005Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:07:14.042975Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:07:14.915051Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:07:14.922949Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T09:07:14.943026Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:07:14.943135Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:07:16.083066Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:07:16.083196Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.04s, play_time: 2.04s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 2e3d7466-160f-4fec-80e9-4fdf8aa00f13, data: Any { .. } } })]).
+2026-05-15T09:07:16.083352Z  INFO runner: songbird::tracks::queue: 1 tracks remain.
+2026-05-15T09:07:16.083520Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 2 removed.
+2026-05-15T09:07:16.102988Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T09:07:16.123136Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:07:16.143053Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:07:19.823071Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:07:19.823213Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.68s, play_time: 3.68s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: de935923-e86c-4958-9b68-4abb714f8a5b, data: Any { .. } } })]).
+2026-05-15T09:07:19.823344Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T09:07:19.823449Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T09:07:19.903039Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T09:17:52.686985Z  INFO kikisen_yomiyomi_rust: initialized logging system
+2026-05-15T09:17:53.318202Z  INFO start:start_connection{[3mstart_shard[0m[2m=[0m0 [3mend_shard[0m[2m=[0m0 [3mtotal_shards[0m[2m=[0m1}:initialize:boot{[3mshard_info[0m[2m=[0m[ShardId(0), ShardId(1)]}: serenity::gateway::bridge::shard_manager: Telling shard queuer to start shard 0
+2026-05-15T09:17:53.591094Z  INFO run: serenity::gateway::bridge::shard_runner: [ShardRunner ShardInfo { id: ShardId(0), total: 1 }] Running
+2026-05-15T09:17:54.271032Z  INFO kikisen_yomiyomi_rust: ready, logged in as 聞き専読み読みくん
+2026-05-15T09:18:15.236578Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Crypto scheme negotiation -- wanted Aes256Gcm. Chose Aes256Gcm from modes ["aead_aes256_gcm_rtpsize", "aead_xchacha20_poly1305_rtpsize"].
+2026-05-15T09:18:15.292001Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Connected to: c-nrt16-e9b4c8f0.discord.media:2053
+2026-05-15T09:18:15.292152Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: WS heartbeat duration 13750ms.
+2026-05-15T09:18:15.808683Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:18:15.809897Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T09:18:15.810329Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T09:18:15.810535Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:18:15.810576Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:18:15.810611Z  INFO runner: songbird::events::store: Firing Play for [0]
+2026-05-15T09:18:15.830640Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:18:15.850779Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:18:18.930585Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:18:18.930711Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 3.08s, play_time: 3.08s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 62583c5c-b699-4417-8602-57aaca3c947c, data: Any { .. } } })]).
+2026-05-15T09:18:18.930799Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T09:18:18.930887Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T09:18:19.030651Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T09:18:37.610534Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T09:18:37.610607Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T09:18:37.650509Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:18:37.650630Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:18:38.210483Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:18:38.374398Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:18:38.390527Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T09:18:38.410636Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:18:38.410739Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:18:38.410807Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T09:18:38.430560Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T09:18:38.450519Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T09:18:41.070723Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T09:18:41.070859Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 94104114-6b75-4667-8ab9-a52bf9eb543f, data: Any { .. } } })]).
+2026-05-15T09:18:41.070953Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T09:18:41.071048Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T09:19:10.229913Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:19:10.250521Z  INFO runner: songbird::driver::tasks::events: Event state for track 2 added
+2026-05-15T09:19:10.270626Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:19:10.270734Z  INFO runner: songbird::driver::tasks::events: Adding event to track 1.
+2026-05-15T09:19:10.270787Z  INFO runner: songbird::events::store: Firing Play for [1]
+2026-05-15T09:19:10.290486Z  INFO runner: songbird::events::store: Firing Preparing for [1]
+2026-05-15T09:19:10.311639Z  INFO runner: songbird::events::store: Firing Playable for [1]
+2026-05-15T09:19:12.930583Z  INFO runner: songbird::events::store: Firing End for [1]
+2026-05-15T09:19:12.930728Z  INFO runner: songbird::tracks::queue: Queued track ended: Track([(TrackState { playing: End, volume: 1.0, position: 2.62s, play_time: 2.62s, loops: Finite(0), ready: Playable }, TrackHandle { inner: InnerHandle { command_channel: Sender, uuid: 98b5c3c1-a786-4b0b-828d-e5e71fa9d060, data: Any { .. } } })]).
+2026-05-15T09:19:12.930816Z  INFO runner: songbird::tracks::queue: 0 tracks remain.
+2026-05-15T09:19:12.930882Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 of 2 removed.
+2026-05-15T09:19:15.132009Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:19:15.132223Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T09:19:15.230904Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T09:19:15.462733Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T09:19:15.462776Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T09:19:15.490498Z  INFO runner: songbird::driver::tasks::events: Adding event to track 0.
+2026-05-15T09:19:15.490634Z  INFO runner: songbird::events::store: Firing Preparing for [0]
+2026-05-15T09:19:16.270662Z  INFO runner: songbird::events::store: Firing Playable for [0]
+2026-05-15T09:19:21.550537Z  INFO runner: songbird::events::store: Firing End for [0]
+2026-05-15T09:19:21.550668Z  INFO runner: songbird::driver::tasks::events: Event state for track 0 of 1 removed.
+2026-05-15T09:19:21.650759Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(0x0)
+2026-05-15T09:19:26.914143Z  INFO songbird::tracks::queue: Track added to queue.
+2026-05-15T09:19:26.915175Z  INFO runner:run{[3minterconnect[0m[2m=[0mInterconnect { core: Sender, events: Sender, mixer: Sender }}: songbird::driver::tasks::ws: Changing to SpeakingState(MICROPHONE)
+2026-05-15T09:19:26.915212Z  INFO runner: songbird::driver::tasks::events: Event state for track 1 added
+2026-05-15T09:19:26.916048Z  INFO runner{[3mconfig[0m[2m=[0mConfig { crypto_mode: Aes256Gcm, gateway_timeout: Some(FloatDuration(10s)), mix_mode: Stereo, preallocated_tracks: 1, driver_retry: Retry { strategy: Backoff(ExponentialBackoff { min: FloatDuration(250ms), max: FloatDuration(10s), jitter: 0.1 }), retry_limit: Some(5) }, use_softclip: true, driver_timeout: Some(FloatDuration(10s)), disposer: Some(DisposalThread(Sender)), scheduler: None }}: songbird::driver::connection: Disconnected
