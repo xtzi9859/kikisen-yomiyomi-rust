@@ -4,3 +4,4 @@ target
 .env
 examples
 voicevox_core
+logs
