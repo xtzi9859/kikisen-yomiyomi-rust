@@ -150,25 +150,29 @@ fn format_message(message: &serenity::Message, ctx: &serenity::Context) -> Strin
         })
         .into_owned();
 
-    text = CHANNEL_MENTION_REGEX.replace_all(&text, |caps: &regex::Captures| {
-        let chan_id = caps[1].parse::<u64>().unwrap_or(0);
-        let channel_id = serenity::ChannelId::new(chan_id);
-        if let Some(guild_id) = message.guild_id {
-            if let Some(guild) = ctx.cache.guild(guild_id) {
-                if let Some(channel) = guild.channels.get(&channel_id) {
-                    return channel.name.to_string();
+    text = CHANNEL_MENTION_REGEX
+        .replace_all(&text, |caps: &regex::Captures| {
+            let chan_id = caps[1].parse::<u64>().unwrap_or(0);
+            let channel_id = serenity::ChannelId::new(chan_id);
+            if let Some(guild_id) = message.guild_id {
+                if let Some(guild) = ctx.cache.guild(guild_id) {
+                    if let Some(channel) = guild.channels.get(&channel_id) {
+                        return channel.name.to_string();
+                    }
                 }
             }
-        }
-        "不明なチャンネル".to_string()
-    }).into_owned();
+            "不明なチャンネル".to_string()
+        })
+        .into_owned();
 
     text = CUSTOM_EMOJI_REGEX.replace_all(&text, "$1").into_owned();
 
     let mut demojized_text = String::new();
     for grapheme in text.graphemes(true) {
         if let Some(emoji) = emoji::lookup_by_glyph::lookup(grapheme) {
-            let ja_name = emoji.annotations.iter()
+            let ja_name = emoji
+                .annotations
+                .iter()
                 .find(|a| a.lang == "ja")
                 .and_then(|a| a.tts)
                 .unwrap_or(emoji.name);
@@ -180,7 +184,9 @@ fn format_message(message: &serenity::Message, ctx: &serenity::Context) -> Strin
     text = demojized_text;
 
     if !message.sticker_items.is_empty() {
-        let sticker_names: Vec<String> = message.sticker_items.iter()
+        let sticker_names: Vec<String> = message
+            .sticker_items
+            .iter()
             .map(|s| s.name.to_string())
             .collect();
         text.push_str(&format!(" {}", sticker_names.join(" ")));
@@ -284,24 +290,29 @@ async fn restart(ctx: Context<'_>) -> Result<(), Error> {
     std::process::exit(0);
 }
 
-#[poise::command(slash_command)]
-async fn connect(ctx: Context<'_>) -> Result<(), Error> {
-    let (guild_id, voice_channel_id) = {
-        let guild = ctx
-            .guild()
-            .ok_or("this command is usable only in guilds.")?;
-        let channel_id = guild
-            .voice_states
-            .get(&ctx.author().id)
-            .and_then(|voice_state| voice_state.channel_id);
-        (guild.id, channel_id)
-    };
+#[poise::command(slash_command, subcommands("connect"))]
+pub async fn vc(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
 
-    let connect_to = match voice_channel_id {
-        Some(channel) => channel,
+#[poise::command(slash_command)]
+pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("This command is usable only in a guild.")?;
+
+    let user_voice_state = ctx
+        .guild()
+        .and_then(|g| g.voice_states.get(&ctx.author().id).cloned());
+    let connect_channel_id = match user_voice_state.and_then(|v| v.channel_id) {
+        Some(id) => id,
         None => {
-            ctx.say("you need to join a VC before using this command")
-                .await?;
+            ctx.send(poise::CreateReply::default()
+                .embed(serenity::CreateEmbed::new()
+                    .description("To use this command, you need to join a voice channel.")
+                    .color(colors::WARN)
+                )
+            ).await?;
             return Ok(());
         }
     };
@@ -311,30 +322,83 @@ async fn connect(ctx: Context<'_>) -> Result<(), Error> {
         .expect("failed to initialize songbird")
         .clone();
 
-    if let Ok(_) = manager.join(guild_id, connect_to).await {
-        ctx.say(format!("connected <#{}>", connect_to)).await?;
-        let text_channel_id = ctx.channel_id();
-        {
-            let mut map = ctx.data().voice_to_text_map.write().await;
-            let info = map.entry(connect_to).or_insert_with(|| VoiceContextInfo {
-                command_channel: text_channel_id,
-                text_channels: HashSet::new(),
-            });
+    if let Some(call_lock) = manager.get(guild_id) {
+        let current_channel = {
+            let call = call_lock.lock().await;
+            call.current_channel()
+        };
 
-            info.command_channel = text_channel_id;
-            info.text_channels.insert(text_channel_id);
+        if current_channel.is_some() {
+            let ctx_id = ctx.id();
+            let move_button_id = format!("move{}", ctx_id);
 
-            play_voicevox(
-                ctx.serenity_context(),
-                guild_id,
-                "聞き専読み読みくんが参加しました",
-            )
-            .await?;
+            let reply = ctx.send(poise::CreateReply::default()
+                .embed(serenity::CreateEmbed::new()
+                    .description("別のボイスチャンネルに既に参加しています。移動しますか？")
+                    .color(colors::WARN))
+                .components(vec![serenity::CreateActionRow::Buttons(vec![
+                    serenity::CreateButton::new(&move_button_id)
+                        .label("移動する")
+                        .style(serenity::ButtonStyle::Primary),
+                ])])
+            ).await?;
+
+            let interaction = reply
+                .message()
+                .await?
+                .await_component_interaction(ctx.serenity_context())
+                .author_id(ctx.author().id)
+                .timeout(std::time::Duration::from_secs(30))
+                .filter(move |m| m.data.custom_id == move_button_id)
+                .await;
+
+            if let Some(mci) = interaction {
+                join_vc(ctx, guild_id, connect_channel_id).await?;
+
+                mci.create_response(&ctx.serenity_context(), serenity::CreateInteractionResponse::UpdateMessage((
+                    serenity::CreateInteractionResponseMessage::new()
+                        .embed(serenity::CreateEmbed::new()
+                            .description("ボイスチャンネルを移動しました")
+                            .color(colors::SUCCEED)
+                        ))
+                    .components(vec![])
+                )).await?;
+            } else {
+                reply.edit(ctx, poise::CreateReply::default()
+                    .embed(serenity::CreateEmbed::new()
+                        .description("タイムアウトしました")
+                        .color(colors::INFO))
+                    .components(vec![])
+                ).await?;
+            }
+            return Ok(());
         }
-    } else {
-        ctx.say("failed to connect VC").await?;
     }
 
+    join_vc(ctx, guild_id, connect_channel_id).await?;
+    ctx.send(poise::CreateReply::default()
+        .embed(serenity::CreateEmbed::new()
+            .description("ボイスチャンネルに参加しました")
+            .color(colors::SUCCEED)
+        )
+    ).await?;
+
+    Ok(())
+}
+
+async fn join_vc(ctx: Context<'_>, guild_id: serenity::GuildId, channel_id: serenity::ChannelId) -> Result<(), Error> {
+    let manager = songbird::get(ctx.serenity_context()).await.expect("failed to initialize songbird");
+    let _handler = manager.join(guild_id, channel_id).await;
+
+    let mut map = ctx.data().voice_to_text_map.write().await;
+    map.insert(channel_id, VoiceContextInfo {
+        command_channel: ctx.channel_id(),
+        text_channels: HashSet::new(),
+    });
+
+    let bot_name = ctx.cache().current_user().name.clone();
+    let text = format!("{}が参加しました", bot_name);
+    play_voicevox(ctx.serenity_context(), guild_id, &text).await?;
     Ok(())
 }
 
@@ -506,7 +570,7 @@ async fn on_voice_state_update(
                 }
             }
         }
-        _ => None
+        _ => None,
     };
 
     if let Some(text) = text_to_read {
@@ -583,7 +647,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), connect(), restart()],
+            commands: vec![age(), vc(), restart()],
             event_handler: |ctx, event, _framework, data| {
                 Box::pin(async move {
                     match event {
