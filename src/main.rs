@@ -785,11 +785,6 @@ async fn on_message(
     if new_message.author.bot {
         return Ok(());
     }
-    if new_message.content == "!ping" {
-        if let Err(why) = new_message.channel_id.say(&ctx.http, "pong!").await {
-            tracing::error!(?why, "error sending message");
-        }
-    }
     let guild_id = match new_message.guild_id {
         Some(id) => id,
         None => return Ok(()),
@@ -809,6 +804,22 @@ async fn on_message(
 
     if !is_target {
         return Ok(());
+    }
+
+    let skip_server_muted_user = true;
+
+    if skip_server_muted_user {
+        let is_server_muted = if let Some(guild) = ctx.cache.guild(guild_id) {
+            guild.voice_states.get(&new_message.author.id)
+                .map(|vs| vs.mute)
+                .unwrap_or(false)
+        } else {
+            false
+        };
+
+        if is_server_muted {
+            return Ok(());
+        }
     }
 
     if new_message.content == "s" {
