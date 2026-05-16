@@ -282,6 +282,19 @@ async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
     Ok(results)
 }
 
+async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&["--dump-json", "--no-playlist", url,]).output().await?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    if let Some(first_line) = stdout.lines().next() {
+        let video = serde_json::from_str::<YtdlOutput>(first_line)?;
+        Ok(video)
+    } else {
+        Err("動画情報の取得に失敗しました".into())
+    }
+}
+
 async fn play_voicevox(
     ctx: &serenity::Context,
     guild_id: serenity::GuildId,
@@ -433,7 +446,9 @@ pub async fn play(
     let guild_id = ctx
         .guild_id()
         .ok_or("このコマンドはサーバー内でのみ実行できます")?;
+
     let mut item_to_add = None;
+    let mut message_to_delete = None;
 
     if let Some(attachment) = file {
         item_to_add = Some(MusicItem {
@@ -442,14 +457,24 @@ pub async fn play(
             is_ytdl: false,
         });
     } else if let Some(args) = query {
+        let processing_msg = ctx.say("処理中…").await?;
         if args.starts_with("http") {
+            let title = match get_youtube_info(&args).await {
+                Ok(info) => info.title,
+                Err(why) => {
+                    tracing::warn!("failed to retrieve video info from URL: {:?}", why);
+                    "不明なタイトル".to_string()
+                }
+            };
+
             item_to_add = Some(MusicItem {
                 url: args.clone(),
-                title: "Youtube Video".to_string(),
+                title: title,
                 is_ytdl: true,
             });
+
+            message_to_delete = Some(processing_msg);
         } else {
-            let processing_msg = ctx.say("検索中…").await?;
             let search_results = search_youtube(&args).await?;
             if search_results.is_empty() {
                 processing_msg
@@ -526,6 +551,8 @@ pub async fn play(
                     title: selected_title,
                     is_ytdl: true,
                 });
+
+                message_to_delete = Some(processing_msg);
             } else {
                 let _ = processing_msg
                     .edit(
@@ -560,6 +587,10 @@ pub async fn play(
                 ctx.data().voice_to_text_map.clone(),
             )
             .await?;
+        }
+
+        if let Some(msg) = message_to_delete {
+            let _ = msg.delete(ctx).await;
         }
     }
 
