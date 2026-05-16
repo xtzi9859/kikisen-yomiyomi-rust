@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use dotenvy::dotenv;
 use regex::Regex;
+use serde_json::json;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::env;
 use std::sync::{Arc, LazyLock};
-use serde_json::json;
 use tempfile::Builder;
 use tokio::sync::RwLock;
 
@@ -30,10 +30,15 @@ struct Data {
 struct FileDeleter {
     _temp_file_path: Arc<tempfile::TempPath>,
 }
-#[allow(dead_code)]
 struct MusicItem {
     url: String,
     title: String,
+    is_ytdl: bool,
+}
+#[derive(serde::Deserialize)]
+struct YtdlOutput {
+    title: String,
+    webpage_url: String,
 }
 struct MusicState {
     queue: VecDeque<MusicItem>,
@@ -44,7 +49,7 @@ struct MusicEndHandler {
     ctx: serenity::Context,
     guild_id: serenity::GuildId,
     music_state: Arc<RwLock<MusicState>>,
-    voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>
+    voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
 }
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -254,6 +259,29 @@ fn format_message(message: &serenity::Message, ctx: &serenity::Context) -> Strin
     format!("{}{}", prefix, text)
 }
 
+async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&[
+            "--dump-json",
+            "--default-search",
+            "ytsearch",
+            &format!("ytsearch10:{}", query),
+        ])
+        .output()
+        .await?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut results = Vec::new();
+
+    for line in stdout.lines() {
+        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
+            results.push(video);
+        }
+    }
+
+    Ok(results)
+}
+
 async fn play_voicevox(
     ctx: &serenity::Context,
     guild_id: serenity::GuildId,
@@ -268,7 +296,6 @@ async fn play_voicevox(
     let mut query_response = client.post(&query_url).send().await?.text().await?;
     let mut query_json: serde_json::Value = serde_json::from_str(&query_response)?;
     query_json["speedScale"] = json!(1.5);
-
     query_response = serde_json::to_string(&query_json)?;
 
     let synthesis_url = "http://192.168.0.3:50021/synthesis?speaker=1";
@@ -317,7 +344,7 @@ async fn play_next_music(
     ctx: &serenity::Context,
     guild_id: serenity::GuildId,
     music_state: Arc<RwLock<MusicState>>,
-    voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>
+    voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
 ) -> Result<(), Error> {
     let manager = songbird::get(ctx).await.expect("songbird error").clone();
 
@@ -327,7 +354,8 @@ async fn play_next_music(
 
         let target_text_channel = if let Some(v_id) = vc_id {
             let map = voice_to_text_map.read().await;
-            map.get(&serenity::ChannelId::from(v_id)).map(|info| info.command_channel)
+            map.get(&serenity::ChannelId::from(v_id))
+                .map(|info| info.command_channel)
         } else {
             None
         };
@@ -336,13 +364,16 @@ async fn play_next_music(
 
         if let Some(next_item) = state.queue.pop_front() {
             let client = reqwest::Client::new();
-            let source = songbird::input::HttpRequest::new(client, next_item.url).into();
+            let source = if next_item.is_ytdl {
+                songbird::input::YoutubeDl::new(client, next_item.url.clone()).into()
+            } else {
+                songbird::input::HttpRequest::new(client, next_item.url.clone()).into()
+            };
             let track_handler = call.play(source);
-
             let _ = track_handler.set_volume(state.volume);
 
             let _ = track_handler.add_event(
-                Event::Track(TrackEvent::End), 
+                Event::Track(TrackEvent::End),
                 MusicEndHandler {
                     ctx: ctx.clone(),
                     guild_id,
@@ -353,7 +384,9 @@ async fn play_next_music(
 
             state.current_track = Some(track_handler);
             if let Some(channel) = target_text_channel {
-                let _ = channel.say(&ctx.http, format!("再生中: {}", next_item.title)).await;
+                let _ = channel
+                    .say(&ctx.http, format!("再生中: {}", next_item.title))
+                    .await;
             }
         } else {
             state.current_track = None;
@@ -362,6 +395,174 @@ async fn play_next_music(
             }
         }
     }
+    Ok(())
+}
+
+#[poise::command(prefix_command, aliases("s"))]
+pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
+    let state = ctx.data().music_state.read().await;
+    if let Some(handle) = &state.current_track {
+        let _ = handle.stop();
+        ctx.say("スキップしました").await?;
+    } else {
+        ctx.say("再生していません").await?;
+    }
+    Ok(())
+}
+
+#[poise::command(prefix_command, aliases("vol"))]
+pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
+    let actual_vol = vol_input / 100.0;
+    let mut state = ctx.data().music_state.write().await;
+
+    state.volume = actual_vol;
+    if let Some(handle) = &state.current_track {
+        let _ = handle.set_volume(actual_vol);
+    }
+    ctx.say(format!("音量を`{}`に設定しました。", vol_input))
+        .await?;
+    Ok(())
+}
+
+#[poise::command(prefix_command, aliases("p"))]
+pub async fn play(
+    ctx: Context<'_>,
+    file: Option<serenity::Attachment>,
+    #[rest] query: Option<String>,
+) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます")?;
+    let mut item_to_add = None;
+
+    if let Some(attachment) = file {
+        item_to_add = Some(MusicItem {
+            url: attachment.url.clone(),
+            title: attachment.filename.clone(),
+            is_ytdl: false,
+        });
+    } else if let Some(args) = query {
+        if args.starts_with("http") {
+            item_to_add = Some(MusicItem {
+                url: args.clone(),
+                title: "Youtube Video".to_string(),
+                is_ytdl: true,
+            });
+        } else {
+            let processing_msg = ctx.say("検索中…").await?;
+            let search_results = search_youtube(&args).await?;
+            if search_results.is_empty() {
+                processing_msg
+                    .edit(
+                        ctx,
+                        poise::CreateReply::default().content("検索結果が見つかりませんでした"),
+                    )
+                    .await?;
+                return Ok(());
+            }
+
+            let mut options = Vec::new();
+            for video in search_results.iter().take(10) {
+                let label = if video.title.chars().count() > 95 {
+                    format!("{}...", video.title.chars().take(95).collect::<String>())
+                } else {
+                    video.title.clone()
+                };
+                options.push(serenity::CreateSelectMenuOption::new(
+                    label,
+                    &video.webpage_url,
+                ));
+            }
+
+            let select_menu = serenity::CreateSelectMenu::new(
+                "youtube_search_select",
+                serenity::CreateSelectMenuKind::String { options },
+            )
+            .placeholder("再生する動画を選択してください。");
+
+            processing_msg
+                .edit(
+                    ctx,
+                    poise::CreateReply::default()
+                        .content(format!("`{}`の検索結果", args))
+                        .components(vec![serenity::CreateActionRow::SelectMenu(select_menu)]),
+                )
+                .await?;
+
+            let interaction = processing_msg
+                .message()
+                .await?
+                .await_component_interaction(ctx.serenity_context())
+                .author_id(ctx.author().id)
+                .timeout(std::time::Duration::from_secs(60))
+                .await;
+
+            if let Some(mci) = interaction {
+                let selected_url = match &mci.data.kind {
+                    serenity::ComponentInteractionDataKind::StringSelect { values } => {
+                        values[0].clone()
+                    }
+                    _ => return Ok(()),
+                };
+
+                let selected_title = search_results
+                    .into_iter()
+                    .find(|v| v.webpage_url == selected_url)
+                    .map(|v| v.title)
+                    .unwrap_or_else(|| "Youtube Video".to_string());
+
+                mci.create_response(
+                    ctx.serenity_context(),
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        serenity::CreateInteractionResponseMessage::new()
+                            .content("動画を処理中…")
+                            .components(vec![]),
+                    ),
+                )
+                .await?;
+
+                item_to_add = Some(MusicItem {
+                    url: selected_url,
+                    title: selected_title,
+                    is_ytdl: true,
+                });
+            } else {
+                let _ = processing_msg
+                    .edit(
+                        ctx,
+                        poise::CreateReply::default()
+                            .content("タイムアウトしました。")
+                            .components(vec![]),
+                    )
+                    .await;
+            }
+        }
+    } else {
+        ctx.say("ファイル、検索ワード、URLのいずれかを指定してください。")
+            .await?;
+    }
+
+    if let Some(item) = item_to_add {
+        ctx.say(format!("キューに追加しました: {}", item.title))
+            .await?;
+
+        let should_play = {
+            let mut state = ctx.data().music_state.write().await;
+            state.queue.push_back(item);
+            state.current_track.is_none()
+        };
+
+        if should_play {
+            play_next_music(
+                ctx.serenity_context(),
+                guild_id,
+                ctx.data().music_state.clone(),
+                ctx.data().voice_to_text_map.clone(),
+            )
+            .await?;
+        }
+    }
+
     Ok(())
 }
 
@@ -488,8 +689,16 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
     let embed = serenity::CreateEmbed::new()
         .title(format!("<#{}>に接続しました。", connect_channel_id.get()))
         .color(colors::SUCCEED)
-        .field("通知送信先", format!("<#{}>", ctx.channel_id().get()), false)
-        .field("読み上げ対象", format!("<#{}>", ctx.channel_id().get()), false);
+        .field(
+            "通知送信先",
+            format!("<#{}>", ctx.channel_id().get()),
+            false,
+        )
+        .field(
+            "読み上げ対象",
+            format!("<#{}>", ctx.channel_id().get()),
+            false,
+        );
 
     ctx.send(poise::CreateReply::default().embed(embed)).await?;
 
@@ -586,53 +795,6 @@ async fn on_message(
                 let reaction = serenity::ReactionType::Unicode("⏭️".to_string());
                 if let Err(why) = new_message.react(&ctx.http, reaction).await {
                     tracing::error!(?why, "failed to add reaction");
-                }
-            }
-        }
-        return Ok(());
-    }
-
-    if new_message.content == "!play" || new_message.content == "!p" {
-        if let Some(attachment) = new_message.attachments.first() {
-            let item = MusicItem {
-                url: attachment.url.clone(),
-                title: attachment.filename.clone(),
-            };
-
-            let should_play = {
-                let mut state = data.music_state.write().await;
-                state.queue.push_back(item);
-                state.current_track.is_none()
-            };
-
-            let _ = new_message.channel_id.say(&ctx.http, format!("キューに追加しました: {}", attachment.filename)).await;
-
-            if should_play {
-                play_next_music(ctx, guild_id, data.music_state.clone(), data.voice_to_text_map.clone()).await?;
-            }
-        }
-    }
-
-    if new_message.content == "!skip" || new_message.content == "!s" {
-        let state = data.music_state.read().await;
-        if let Some(handle) = &state.current_track {
-            let _ = handle.stop();
-            let _ = new_message.channel_id.say(&ctx.http, "スキップしました").await;
-        }
-        return Ok(());
-    }
-    if new_message.content.starts_with("!volume") || new_message.content.starts_with("!vol") {
-        let parts: Vec<&str> = new_message.content.split_whitespace().collect();
-
-        if parts.len() >= 2{
-            if let Ok(vol_input) = parts[1].parse::<f32>() {
-                let actual_vol = vol_input / 100.0;
-                let mut state = data.music_state.write().await;
-                state.volume = actual_vol;
-
-                if let Some(handle) = &state.current_track {
-                    let _ = handle.set_volume(actual_vol);
-                    let _ = new_message.channel_id.say(&ctx.http, format!("音量を`{}`に設定しました", actual_vol)).await;
                 }
             }
         }
@@ -813,7 +975,11 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), vc(), restart()],
+            commands: vec![age(), vc(), restart(), play(), skip(), volume()],
+            prefix_options: poise::PrefixFrameworkOptions {
+                prefix: Some("!".into()),
+                ..Default::default()
+            },
             event_handler: |ctx, event, _framework, data| {
                 Box::pin(async move {
                     match event {
