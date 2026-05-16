@@ -4,6 +4,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::env;
 use std::sync::{Arc, LazyLock};
+use serde_json::json;
 use tempfile::Builder;
 use tokio::sync::RwLock;
 
@@ -264,7 +265,11 @@ async fn play_voicevox(
         urlencoding::encode(&text)
     );
 
-    let query_response = client.post(&query_url).send().await?.text().await?;
+    let mut query_response = client.post(&query_url).send().await?.text().await?;
+    let mut query_json: serde_json::Value = serde_json::from_str(&query_response)?;
+    query_json["speedScale"] = json!(1.5);
+
+    query_response = serde_json::to_string(&query_json)?;
 
     let synthesis_url = "http://192.168.0.3:50021/synthesis?speaker=1";
     let audio_bytes = client
@@ -395,7 +400,7 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
             ctx.send(
                 poise::CreateReply::default().embed(
                     serenity::CreateEmbed::new()
-                        .description("To use this command, you need to join a voice channel.")
+                        .description("コマンドを使用するにはVCに参加してください。")
                         .color(colors::WARN),
                 ),
             )
@@ -454,7 +459,7 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
                     serenity::CreateInteractionResponse::UpdateMessage(
                         (serenity::CreateInteractionResponseMessage::new().embed(
                             serenity::CreateEmbed::new()
-                                .description("ボイスチャンネルを移動しました")
+                                .description("ボイスチャンネルを移動しました。")
                                 .color(colors::SUCCEED),
                         ))
                         .components(vec![]),
@@ -468,7 +473,7 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
                         poise::CreateReply::default()
                             .embed(
                                 serenity::CreateEmbed::new()
-                                    .description("タイムアウトしました")
+                                    .description("タイムアウトしました。")
                                     .color(colors::INFO),
                             )
                             .components(vec![]),
@@ -480,14 +485,13 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
     }
 
     join_vc(ctx, guild_id, connect_channel_id).await?;
-    ctx.send(
-        poise::CreateReply::default().embed(
-            serenity::CreateEmbed::new()
-                .description("ボイスチャンネルに参加しました")
-                .color(colors::SUCCEED),
-        ),
-    )
-    .await?;
+    let embed = serenity::CreateEmbed::new()
+        .title(format!("<#{}>に接続しました。", connect_channel_id.get()))
+        .color(colors::SUCCEED)
+        .field("通知送信先", format!("<#{}>", ctx.channel_id().get()), false)
+        .field("読み上げ対象", format!("<#{}>", ctx.channel_id().get()), false);
+
+    ctx.send(poise::CreateReply::default().embed(embed)).await?;
 
     Ok(())
 }

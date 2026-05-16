@@ -11,6 +11,7 @@ poise = "0.6.2"
 regex = "1.12.3"
 reqwest = "0.12"
 rustls = { version = "0.23.40", features = ["ring"] }
+serde_json = "1.0.149"
 serenity = "0.12.5"
 songbird = { version = "0.6.0", features = ["driver", "builtin-queue"] }
 symphonia = { version = "0.5.5", features = ["wav"] }
