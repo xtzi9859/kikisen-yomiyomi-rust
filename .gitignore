@@ -5,3 +5,4 @@ target
 examples
 voicevox_core
 logs
+database.db

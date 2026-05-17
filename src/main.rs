@@ -6,6 +6,7 @@ use std::env;
 use std::sync::{Arc, LazyLock};
 use tempfile::Builder;
 use tokio::sync::RwLock;
+use unicode_segmentation::UnicodeSegmentation;
 
 use tracing;
 use tracing_appender::rolling;
@@ -15,12 +16,15 @@ use poise::serenity_prelude as serenity;
 use songbird::SerenityInit;
 use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, TrackEvent};
 
-use unicode_segmentation::UnicodeSegmentation;
-
 use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
 
+use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbBackend, Schema};
+
+mod db;
+
 const OPEN_JTALK_DIR: &str = "./voicevox_core/dict/open_jtalk_dic_utf_8-1.11";
-const ONNXRUNTIME_FILENAME: &str = "./voicevox_core/onnxruntime/lib/libvoicevox_onnxruntime.so.1.17.3";
+const ONNXRUNTIME_FILENAME: &str =
+    "./voicevox_core/onnxruntime/lib/libvoicevox_onnxruntime.so.1.17.3";
 const ACCELERATION_MODE: voicevox_core::AccelerationMode = voicevox_core::AccelerationMode::Cpu;
 const VVMS_DIR: &str = "./voicevox_core/models/vvms";
 
@@ -31,7 +35,9 @@ pub struct VoiceContextInfo {
 struct Data {
     pub voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
     music_state: Arc<RwLock<MusicState>>,
-    pub synthesizer: Arc<voicevox_core::nonblocking::Synthesizer<voicevox_core::nonblocking::OpenJtalk>>,
+    pub synthesizer:
+        Arc<voicevox_core::nonblocking::Synthesizer<voicevox_core::nonblocking::OpenJtalk>>,
+    pub db: DatabaseConnection,
 }
 #[derive(Clone)]
 struct FileDeleter {
@@ -314,9 +320,13 @@ async fn play_voicevox(
 
     let mut audio_query = data.synthesizer.create_audio_query(text, style_id).await?;
 
-    audio_query.speed_scale = 1.5;
+    audio_query.speed_scale = 1.2;
 
-    let audio_bytes = data.synthesizer.synthesis(&audio_query, style_id).perform().await?;
+    let audio_bytes = data
+        .synthesizer
+        .synthesis(&audio_query, style_id)
+        .perform()
+        .await?;
 
     let temp_file = Builder::new()
         .prefix("voicevox_")
@@ -1042,10 +1052,29 @@ async fn main() {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                let synthesizer = Synthesizer::builder(Onnxruntime::load_once().filename(ONNXRUNTIME_FILENAME).perform().await?)
-                    .text_analyzer(OpenJtalk::new(OPEN_JTALK_DIR).await.unwrap())
-                    .acceleration_mode(ACCELERATION_MODE)
-                    .build()?;
+
+                let db: DatabaseConnection = Database::connect("sqlite://database.db?mode=rwc")
+                    .await
+                    .expect("failed to connect to database");
+
+                let builder = db.get_database_backend();
+                let schema = Schema::new(DbBackend::Sqlite);
+
+                let stmt_guild = builder.build(&schema.create_table_from_entity(db::guild_settings::Entity));
+                let _ = db.execute(stmt_guild).await;
+
+                let stmt_user = builder.build(&schema.create_table_from_entity(db::user_settings::Entity));
+                let _ = db.execute(stmt_user).await;
+
+                let synthesizer = Synthesizer::builder(
+                    Onnxruntime::load_once()
+                        .filename(ONNXRUNTIME_FILENAME)
+                        .perform()
+                        .await?,
+                )
+                .text_analyzer(OpenJtalk::new(OPEN_JTALK_DIR).await.unwrap())
+                .acceleration_mode(ACCELERATION_MODE)
+                .build()?;
                 let mut entries = tokio::fs::read_dir(VVMS_DIR)
                     .await
                     .expect("vvm directory not found");
@@ -1066,6 +1095,7 @@ async fn main() {
                         volume: 0.1,
                     })),
                     synthesizer: Arc::new(synthesizer),
+                    db,
                 })
             })
         })
