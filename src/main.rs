@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use dotenvy::dotenv;
 use regex::Regex;
-use serde_json::json;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::env;
 use std::sync::{Arc, LazyLock};
@@ -18,6 +17,13 @@ use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, T
 
 use unicode_segmentation::UnicodeSegmentation;
 
+use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
+
+const OPEN_JTALK_DIR: &str = "./voicevox_core/dict/open_jtalk_dic_utf_8-1.11";
+const ONNXRUNTIME_FILENAME: &str = "./voicevox_core/onnxruntime/lib/libvoicevox_onnxruntime.so.1.17.3";
+const ACCELERATION_MODE: voicevox_core::AccelerationMode = voicevox_core::AccelerationMode::Cpu;
+const VVMS_DIR: &str = "./voicevox_core/models/vvms";
+
 pub struct VoiceContextInfo {
     pub command_channel: serenity::ChannelId,
     pub text_channels: HashSet<serenity::ChannelId>,
@@ -25,6 +31,7 @@ pub struct VoiceContextInfo {
 struct Data {
     pub voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
     music_state: Arc<RwLock<MusicState>>,
+    pub synthesizer: Arc<voicevox_core::nonblocking::Synthesizer<voicevox_core::nonblocking::OpenJtalk>>,
 }
 #[derive(Clone)]
 struct FileDeleter {
@@ -284,7 +291,9 @@ async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
 
 async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
     let output = tokio::process::Command::new("yt-dlp")
-        .args(&["--dump-json", "--no-playlist", url,]).output().await?;
+        .args(&["--dump-json", "--no-playlist", url])
+        .output()
+        .await?;
     let stdout = String::from_utf8_lossy(&output.stdout);
 
     if let Some(first_line) = stdout.lines().next() {
@@ -299,27 +308,15 @@ async fn play_voicevox(
     ctx: &serenity::Context,
     guild_id: serenity::GuildId,
     text: &str,
+    data: &Data,
 ) -> Result<(), Error> {
-    let client = reqwest::Client::new();
-    let query_url = format!(
-        "http://192.168.0.3:50021/audio_query?speaker=1&text={}",
-        urlencoding::encode(&text)
-    );
+    let style_id = voicevox_core::StyleId::new(8);
 
-    let mut query_response = client.post(&query_url).send().await?.text().await?;
-    let mut query_json: serde_json::Value = serde_json::from_str(&query_response)?;
-    query_json["speedScale"] = json!(1.5);
-    query_response = serde_json::to_string(&query_json)?;
+    let mut audio_query = data.synthesizer.create_audio_query(text, style_id).await?;
 
-    let synthesis_url = "http://192.168.0.3:50021/synthesis?speaker=1";
-    let audio_bytes = client
-        .post(synthesis_url)
-        .header("Content-Type", "application/json")
-        .body(query_response)
-        .send()
-        .await?
-        .bytes()
-        .await?;
+    audio_query.speed_scale = 1.5;
+
+    let audio_bytes = data.synthesizer.synthesis(&audio_query, style_id).perform().await?;
 
     let temp_file = Builder::new()
         .prefix("voicevox_")
@@ -327,7 +324,6 @@ async fn play_voicevox(
         .tempfile()?;
 
     let temp_file_path = temp_file.into_temp_path();
-
     tokio::fs::write(&temp_file_path, &audio_bytes).await?;
 
     let manager = songbird::get(ctx)
@@ -757,7 +753,7 @@ async fn join_vc(
 
     let bot_name = ctx.cache().current_user().name.clone();
     let text = format!("{}が参加しました", bot_name);
-    play_voicevox(ctx.serenity_context(), guild_id, &text).await?;
+    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data()).await?;
     Ok(())
 }
 
@@ -810,7 +806,9 @@ async fn on_message(
 
     if skip_server_muted_user {
         let is_server_muted = if let Some(guild) = ctx.cache.guild(guild_id) {
-            guild.voice_states.get(&new_message.author.id)
+            guild
+                .voice_states
+                .get(&new_message.author.id)
                 .map(|vs| vs.mute)
                 .unwrap_or(false)
         } else {
@@ -846,7 +844,7 @@ async fn on_message(
     let mut text_to_read = format_message(new_message, ctx);
     text_to_read = sanitize_text(&text_to_read);
     if !text_to_read.is_empty() {
-        play_voicevox(ctx, guild_id, &text_to_read).await?;
+        play_voicevox(ctx, guild_id, &text_to_read, data).await?;
     }
     Ok(())
 }
@@ -944,7 +942,7 @@ async fn on_voice_state_update(
     };
 
     if let Some(text) = text_to_read {
-        play_voicevox(ctx, guild_id, &text).await?;
+        play_voicevox(ctx, guild_id, &text, data).await?;
     }
 
     if !should_check_auto_disconnect {
@@ -1044,6 +1042,22 @@ async fn main() {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                let synthesizer = Synthesizer::builder(Onnxruntime::load_once().filename(ONNXRUNTIME_FILENAME).perform().await?)
+                    .text_analyzer(OpenJtalk::new(OPEN_JTALK_DIR).await.unwrap())
+                    .acceleration_mode(ACCELERATION_MODE)
+                    .build()?;
+                let mut entries = tokio::fs::read_dir(VVMS_DIR)
+                    .await
+                    .expect("vvm directory not found");
+                while let Some(entry) = entries.next_entry().await? {
+                    let path = entry.path();
+
+                    if path.extension().and_then(|s| s.to_str()) == Some("vvm") {
+                        tracing::info!("loading vvm: {:?}", path.file_name());
+                        let model = VoiceModelFile::open(&path).await?;
+                        let _ = synthesizer.load_voice_model(&model).perform().await?;
+                    }
+                }
                 Ok(Data {
                     voice_to_text_map: Arc::new(RwLock::new(HashMap::new())),
                     music_state: Arc::new(RwLock::new(MusicState {
@@ -1051,6 +1065,7 @@ async fn main() {
                         current_track: None,
                         volume: 0.1,
                     })),
+                    synthesizer: Arc::new(synthesizer),
                 })
             })
         })

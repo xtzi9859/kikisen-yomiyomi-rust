@@ -23,4 +23,5 @@ tracing-appender = "0.2.5"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 unicode-segmentation = "1.13.2"
 urlencoding = "2.1.3"
+voicevox_core = { git = "https://github.com/VOICEVOX/voicevox_core.git", version = "0.0.0", features = ["buildtime-download-onnxruntime", "load-onnxruntime"] }
 vvcore = "0.0.2"
