@@ -18,16 +18,27 @@ use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, T
 
 use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
 
-use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbBackend, Schema};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, ConnectionTrait, Database, DatabaseConnection,
+    DbBackend, EntityTrait, QueryFilter, Schema,
+};
 
 mod db;
 
+const DEFAULT_SPEAKER_ID: i32 = 8;
 const OPEN_JTALK_DIR: &str = "./voicevox_core/dict/open_jtalk_dic_utf_8-1.11";
 const ONNXRUNTIME_FILENAME: &str =
     "./voicevox_core/onnxruntime/lib/libvoicevox_onnxruntime.so.1.17.3";
 const ACCELERATION_MODE: voicevox_core::AccelerationMode = voicevox_core::AccelerationMode::Cpu;
 const VVMS_DIR: &str = "./voicevox_core/models/vvms";
 
+#[derive(Clone, Debug)]
+pub struct VoiceStyleInfo {
+    pub character_name: String,
+    pub style_name: String,
+    pub style_id: u32,
+    pub display_label: String,
+}
 pub struct VoiceContextInfo {
     pub command_channel: serenity::ChannelId,
     pub text_channels: HashSet<serenity::ChannelId>,
@@ -38,6 +49,7 @@ struct Data {
     pub synthesizer:
         Arc<voicevox_core::nonblocking::Synthesizer<voicevox_core::nonblocking::OpenJtalk>>,
     pub db: DatabaseConnection,
+    pub voice_styles: Vec<VoiceStyleInfo>,
 }
 #[derive(Clone)]
 struct FileDeleter {
@@ -315,12 +327,59 @@ async fn play_voicevox(
     guild_id: serenity::GuildId,
     text: &str,
     data: &Data,
+    user_id: Option<serenity::UserId>,
 ) -> Result<(), Error> {
-    let style_id = voicevox_core::StyleId::new(8);
+    let g_id = guild_id.get() as i64;
 
+    let guild_settings = db::guild_settings::Entity::find()
+        .filter(db::guild_settings::Column::GuildId.eq(g_id))
+        .one(&data.db)
+        .await
+        .ok()
+        .flatten();
+
+    let user_settings = if let Some(uid) = user_id {
+        db::user_settings::Entity::find()
+            .filter(db::user_settings::Column::GuildId.eq(g_id))
+            .filter(db::user_settings::Column::UserId.eq(uid.get() as i64))
+            .one(&data.db)
+            .await
+            .ok()
+            .flatten()
+    } else {
+        None
+    };
+
+    let speaker_id = user_settings
+        .as_ref()
+        .and_then(|u| u.speaker_id)
+        .or_else(|| guild_settings.as_ref().and_then(|g| g.default_speaker_id))
+        .unwrap_or(DEFAULT_SPEAKER_ID);
+
+    let speed = user_settings
+        .as_ref()
+        .and_then(|u| u.speed)
+        .or_else(|| guild_settings.as_ref().and_then(|g| g.default_speed))
+        .unwrap_or(1.0);
+
+    let pitch = user_settings
+        .as_ref()
+        .and_then(|u| u.pitch)
+        .or_else(|| guild_settings.as_ref().and_then(|g| g.default_pitch))
+        .unwrap_or(0.0);
+
+    let intonation = user_settings
+        .as_ref()
+        .and_then(|u| u.intonation)
+        .or_else(|| guild_settings.as_ref().and_then(|g| g.default_intonation))
+        .unwrap_or(1.0);
+
+    let style_id = voicevox_core::StyleId::new(speaker_id as u32);
     let mut audio_query = data.synthesizer.create_audio_query(text, style_id).await?;
 
-    audio_query.speed_scale = 1.2;
+    audio_query.speed_scale = speed;
+    audio_query.pitch_scale = pitch;
+    audio_query.intonation_scale = intonation;
 
     let audio_bytes = data
         .synthesizer
@@ -603,6 +662,38 @@ pub async fn play(
     Ok(())
 }
 
+async fn upsert_user_setting<F>(
+    db: &sea_orm::DatabaseConnection,
+    guild_id: i64,
+    user_id: i64,
+    update_fn: F,
+) -> Result<(), Error>
+where
+    F: FnOnce(&mut db::user_settings::ActiveModel),
+{
+    let existing = db::user_settings::Entity::find()
+        .filter(db::user_settings::Column::GuildId.eq(guild_id))
+        .filter(db::user_settings::Column::UserId.eq(user_id))
+        .one(db)
+        .await?;
+
+    if let Some(model) = existing {
+        let mut active = model.into();
+        update_fn(&mut active);
+        active.update(db).await?;
+    } else {
+        let mut active = db::user_settings::ActiveModel {
+            guild_id: Set(guild_id),
+            user_id: Set(user_id),
+            ..Default::default()
+        };
+        update_fn(&mut active);
+        active.insert(db).await?;
+    }
+
+    Ok(())
+}
+
 #[poise::command(slash_command)]
 async fn restart(ctx: Context<'_>) -> Result<(), Error> {
     let embed = serenity::CreateEmbed::new()
@@ -616,6 +707,340 @@ async fn restart(ctx: Context<'_>) -> Result<(), Error> {
 
     ctx.framework().shard_manager().shutdown_all().await;
     std::process::exit(0);
+}
+
+fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<Vec<(String, String)>> {
+    let mut pages: Vec<Vec<(String, String)>> = Vec::new();
+    let mut current: Vec<(String, String)> = Vec::new();
+
+    for style in styles {
+        if current.len() >= 24 {
+            pages.push(current);
+            current = Vec::new();
+        }
+        current.push((
+            format!("{}（{}）", style.character_name, style.style_name),
+            format!("`{}`", style.style_id),
+        ));
+    }
+    if !current.is_empty() {
+        pages.push(current);
+    }
+
+    pages
+}
+
+fn voice_style_embed(pages: &[Vec<(String, String)>], page: usize) -> serenity::CreateEmbed {
+    let mut embed = serenity::CreateEmbed::new()
+        .title(format!("VOICEVOX 話者一覧（{}/{}）", page + 1, pages.len()))
+        .color(colors::INFO)
+        .footer(serenity::CreateEmbedFooter::new(
+            "話者IDを /user_setting で設定できます",
+        ));
+
+    for (name, value) in &pages[page] {
+        embed = embed.field(name, value, true);
+    }
+
+    embed
+}
+
+fn voice_style_buttons(
+    prev_id: &str,
+    next_id: &str,
+    page: usize,
+    total: usize,
+) -> serenity::CreateActionRow {
+    serenity::CreateActionRow::Buttons(vec![
+        serenity::CreateButton::new(prev_id)
+            .label("◀")
+            .style(serenity::ButtonStyle::Secondary)
+            .disabled(page == 0),
+        serenity::CreateButton::new(next_id)
+            .label("▶")
+            .style(serenity::ButtonStyle::Secondary)
+            .disabled(page >= total - 1),
+    ])
+}
+
+#[poise::command(slash_command)]
+pub async fn voice_styles(ctx: Context<'_>) -> Result<(), Error> {
+    let pages = build_voice_style_pages(&ctx.data().voice_styles);
+
+    if pages.is_empty() {
+        ctx.say("読み込まれた話者がいません。").await?;
+        return Ok(());
+    }
+
+    let total = pages.len();
+    let mut current_page = 0usize;
+
+    let ctx_id = ctx.id();
+    let prev_id = format!("{}prev", ctx_id);
+    let next_id = format!("{}next", ctx_id);
+
+    let reply = ctx
+        .send(
+            poise::CreateReply::default()
+                .ephemeral(true)
+                .embed(voice_style_embed(&pages, current_page))
+                .components(if total > 1 {
+                    vec![voice_style_buttons(&prev_id, &next_id, current_page, total)]
+                } else {
+                    vec![]
+                }),
+        )
+        .await?;
+
+    if total == 1 {
+        return Ok(());
+    }
+
+    let message = reply.message().await?;
+
+    loop {
+        let prev_id_c = prev_id.clone();
+        let next_id_c = next_id.clone();
+
+        let Some(press) = message
+            .await_component_interaction(ctx.serenity_context())
+            .author_id(ctx.author().id)
+            .timeout(std::time::Duration::from_secs(120))
+            .filter(move |m| m.data.custom_id == prev_id_c || m.data.custom_id == next_id_c)
+            .await
+        else {
+            // タイムアウト: ボタンを無効化して終了
+            let _ = reply
+                .edit(
+                    ctx,
+                    poise::CreateReply::default()
+                        .embed(voice_style_embed(&pages, current_page))
+                        .components(vec![]),
+                )
+                .await;
+            break;
+        };
+
+        if press.data.custom_id == prev_id {
+            current_page = current_page.saturating_sub(1);
+        } else {
+            current_page = (current_page + 1).min(total - 1);
+        }
+
+        press
+            .create_response(
+                ctx.serenity_context(),
+                serenity::CreateInteractionResponse::UpdateMessage(
+                    serenity::CreateInteractionResponseMessage::new()
+                        .embed(voice_style_embed(&pages, current_page))
+                        .components(vec![voice_style_buttons(
+                            &prev_id,
+                            &next_id,
+                            current_page,
+                            total,
+                        )]),
+                ),
+            )
+            .await?;
+    }
+
+    Ok(())
+}
+
+async fn autocomplete_voice_style<'a>(
+    ctx: poise::ApplicationContext<'_, Data, Error>,
+    partial: &'a str,
+) -> Vec<serenity::builder::AutocompleteChoice> {
+    ctx.data()
+        .voice_styles
+        .iter()
+        .filter(move |s| partial.is_empty() || s.display_label.contains(partial))
+        .take(25)
+        .map(|s| serenity::builder::AutocompleteChoice::new(s.display_label.clone(), s.style_id))
+        .collect()
+}
+
+#[poise::command(slash_command, subcommands("us_speaker", "us_pitch", "us_speed", "us_intonation", "us_reset"))]
+pub async fn user_setting(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "speaker")]
+async fn us_speaker(
+    ctx: Context<'_>,
+    #[autocomplete = "autocomplete_voice_style"]
+    style_id: u32,
+) -> Result<(), Error> {
+    if !ctx
+        .data()
+        .voice_styles
+        .iter()
+        .any(|vs| vs.style_id == style_id)
+    {
+        ctx.send(
+            poise::CreateReply::default().ephemeral(true).embed(
+                serenity::CreateEmbed::new()
+                    .description(format!(
+                        "ID `{}` は存在しません。/voice_stylesで確認してください。",
+                        style_id
+                    ))
+                    .color(colors::ERROR),
+            ),
+        )
+        .await?;
+        return Ok(());
+    }
+
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
+    let user_id = ctx.author().id.get() as i64;
+
+    upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
+        m.speaker_id = Set(Some(style_id as i32));
+    })
+    .await?;
+
+    let label = ctx
+        .data()
+        .voice_styles
+        .iter()
+        .find(|vs| vs.style_id == style_id)
+        .map(|vs| vs.display_label.as_str())
+        .unwrap_or("不明");
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("話者を `{}` に設定しました。", label))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command, guild_only, rename = "speed")]
+async fn us_speed(
+    ctx: Context<'_>,
+    #[description = "速度（0.50 〜 2.00）"]
+    #[min = 0.5]
+    #[max = 2.0]
+    speed: f32,
+) -> Result<(), Error> {
+    use sea_orm::ActiveValue::Set;
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let user_id  = ctx.author().id.get() as i64;
+
+    upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
+        m.speed = Set(Some(speed));
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default()
+            .ephemeral(true)
+            .embed(
+                serenity::CreateEmbed::new()
+                    .description(format!("速度を `{:.2}` に設定しました。", speed))
+                    .color(colors::SUCCEED),
+            ),
+    )
+    .await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "pitch")]
+async fn us_pitch(
+    ctx: Context<'_>,
+    #[description = "音高（-0.15 〜 0.15）"]
+    #[min = -0.15]
+    #[max = 0.15]
+    pitch: f32,
+) -> Result<(), Error> {
+    use sea_orm::ActiveValue::Set;
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let user_id  = ctx.author().id.get() as i64;
+
+    upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
+        m.pitch = Set(Some(pitch));
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default()
+            .ephemeral(true)
+            .embed(
+                serenity::CreateEmbed::new()
+                    .description(format!("音高を `{:.2}` に設定しました。", pitch))
+                    .color(colors::SUCCEED),
+            ),
+    )
+    .await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, guild_only, rename = "intonation")]
+async fn us_intonation(
+    ctx: Context<'_>,
+    #[description = "抑揚（0.00 〜 2.00）"]
+    #[min = 0.0]
+    #[max = 2.0]
+    intonation: f32,
+) -> Result<(), Error> {
+    use sea_orm::ActiveValue::Set;
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let user_id  = ctx.author().id.get() as i64;
+
+    upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
+        m.intonation = Set(Some(intonation));
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default()
+            .ephemeral(true)
+            .embed(
+                serenity::CreateEmbed::new()
+                    .description(format!("抑揚を `{:.2}` に設定しました。", intonation))
+                    .color(colors::SUCCEED),
+            ),
+    )
+    .await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, guild_only, rename = "reset")]
+async fn us_reset(ctx: Context<'_>) -> Result<(), Error> {
+    use sea_orm::ActiveValue::Set;
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let user_id  = ctx.author().id.get() as i64;
+
+    upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
+        m.speaker_id = Set(None);
+        m.speed      = Set(None);
+        m.pitch      = Set(None);
+        m.intonation = Set(None);
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default()
+            .ephemeral(true)
+            .embed(
+                serenity::CreateEmbed::new()
+                    .description("個人設定をリセットしました。")
+                    .color(colors::SUCCEED),
+            ),
+    )
+    .await?;
+    Ok(())
 }
 
 #[poise::command(slash_command, subcommands("connect"))]
@@ -763,7 +1188,7 @@ async fn join_vc(
 
     let bot_name = ctx.cache().current_user().name.clone();
     let text = format!("{}が参加しました", bot_name);
-    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data()).await?;
+    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data(), None).await?;
     Ok(())
 }
 
@@ -854,7 +1279,14 @@ async fn on_message(
     let mut text_to_read = format_message(new_message, ctx);
     text_to_read = sanitize_text(&text_to_read);
     if !text_to_read.is_empty() {
-        play_voicevox(ctx, guild_id, &text_to_read, data).await?;
+        play_voicevox(
+            ctx,
+            guild_id,
+            &text_to_read,
+            data,
+            Some(new_message.author.id),
+        )
+        .await?;
     }
     Ok(())
 }
@@ -952,7 +1384,7 @@ async fn on_voice_state_update(
     };
 
     if let Some(text) = text_to_read {
-        play_voicevox(ctx, guild_id, &text, data).await?;
+        play_voicevox(ctx, guild_id, &text, data, Some(new.user_id)).await?;
     }
 
     if !should_check_auto_disconnect {
@@ -1025,7 +1457,16 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), vc(), restart(), play(), skip(), volume()],
+            commands: vec![
+                age(),
+                vc(),
+                restart(),
+                play(),
+                skip(),
+                volume(),
+                user_setting(),
+                voice_styles(),
+            ],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("!".into()),
                 ..Default::default()
@@ -1060,10 +1501,12 @@ async fn main() {
                 let builder = db.get_database_backend();
                 let schema = Schema::new(DbBackend::Sqlite);
 
-                let stmt_guild = builder.build(&schema.create_table_from_entity(db::guild_settings::Entity));
+                let stmt_guild =
+                    builder.build(&schema.create_table_from_entity(db::guild_settings::Entity));
                 let _ = db.execute(stmt_guild).await;
 
-                let stmt_user = builder.build(&schema.create_table_from_entity(db::user_settings::Entity));
+                let stmt_user =
+                    builder.build(&schema.create_table_from_entity(db::user_settings::Entity));
                 let _ = db.execute(stmt_user).await;
 
                 let synthesizer = Synthesizer::builder(
@@ -1075,9 +1518,11 @@ async fn main() {
                 .text_analyzer(OpenJtalk::new(OPEN_JTALK_DIR).await.unwrap())
                 .acceleration_mode(ACCELERATION_MODE)
                 .build()?;
+
                 let mut entries = tokio::fs::read_dir(VVMS_DIR)
                     .await
                     .expect("vvm directory not found");
+                let mut voice_styles = Vec::new();
                 while let Some(entry) = entries.next_entry().await? {
                     let path = entry.path();
 
@@ -1085,8 +1530,22 @@ async fn main() {
                         tracing::info!("loading vvm: {:?}", path.file_name());
                         let model = VoiceModelFile::open(&path).await?;
                         let _ = synthesizer.load_voice_model(&model).perform().await?;
+
+                        for character in model.metas() {
+                            for style in &character.styles {
+                                let style_id: u32 = style.id.to_string().parse().unwrap_or(0);
+                                voice_styles.push(VoiceStyleInfo {
+                                    character_name: character.name.clone(),
+                                    style_name: style.name.clone(),
+                                    style_id,
+                                    display_label: format!("{}（{}）", character.name, style.name),
+                                });
+                            }
+                        }
                     }
                 }
+                voice_styles.sort_by_key(|s| s.style_id);
+
                 Ok(Data {
                     voice_to_text_map: Arc::new(RwLock::new(HashMap::new())),
                     music_state: Arc::new(RwLock::new(MusicState {
@@ -1096,6 +1555,7 @@ async fn main() {
                     })),
                     synthesizer: Arc::new(synthesizer),
                     db,
+                    voice_styles,
                 })
             })
         })
