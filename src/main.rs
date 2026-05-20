@@ -1942,13 +1942,17 @@ async fn on_voice_state_update(
                         .then(|| format!("{}が参加しました", member_name))
                 } else {
                     should_check_auto_disconnect = true;
-                    guild_settings.read_vc_move.then(|| {
-                        format!(
+                    if guild_settings.read_vc_move {
+                        Some(format!(
                             "{}が{}に参加しました",
                             member_name,
-                            get_channel_name(new_id),
-                        )
-                    })
+                            get_channel_name(new_id)
+                        ))
+                    } else {
+                        guild_settings
+                            .read_vc_leave
+                            .then(|| format!("{}が退出しました", member_name))
+                    }
                 }
             }
         }
