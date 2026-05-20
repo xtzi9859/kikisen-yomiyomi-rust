@@ -1,30 +1,27 @@
 use async_trait::async_trait;
 use dotenvy::dotenv;
+use poise::serenity_prelude as serenity;
 use regex::Regex;
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, ConnectionTrait, Database, DatabaseConnection,
+    DbBackend, EntityTrait, QueryFilter, Schema,
+};
+use songbird::SerenityInit;
+use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, TrackEvent};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::env;
 use std::sync::{Arc, LazyLock};
 use tempfile::Builder;
 use tokio::sync::RwLock;
-use unicode_segmentation::UnicodeSegmentation;
-
 use tracing;
 use tracing_appender::rolling;
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
-
-use poise::serenity_prelude as serenity;
-use songbird::SerenityInit;
-use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, TrackEvent};
-
+use unicode_segmentation::UnicodeSegmentation;
 use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
-
-use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, ColumnTrait, ConnectionTrait, Database, DatabaseConnection,
-    DbBackend, EntityTrait, QueryFilter, Schema,
-};
 
 mod db;
 
+const DEFAULT_PREFIX: &str = "!";
 const DEFAULT_SPEAKER_ID: i32 = 8;
 const OPEN_JTALK_DIR: &str = "./voicevox_core/dict/open_jtalk_dic_utf_8-1.11";
 const ONNXRUNTIME_FILENAME: &str =
@@ -50,6 +47,7 @@ struct Data {
         Arc<voicevox_core::nonblocking::Synthesizer<voicevox_core::nonblocking::OpenJtalk>>,
     pub db: DatabaseConnection,
     pub voice_styles: Vec<VoiceStyleInfo>,
+    guild_settings_cache: Arc<RwLock<HashMap<serenity::GuildId, db::guild_settings::Model>>>,
 }
 #[derive(Clone)]
 struct FileDeleter {
@@ -490,13 +488,22 @@ pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("vol"))]
 pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
-    let actual_vol = vol_input / 100.0;
+    let actual_vol = (vol_input / 100.0).clamp(0.0, 1.0);
     let mut state = ctx.data().music_state.write().await;
 
     state.volume = actual_vol;
     if let Some(handle) = &state.current_track {
         let _ = handle.set_volume(actual_vol);
     }
+    drop(state);
+
+    if let Some(gid) = ctx.guild_id() {
+        let _ = upsert_guild_setting(&ctx.data(), gid, |m| {
+            m.default_music_vol = Set(actual_vol);
+        })
+        .await;
+    }
+
     ctx.say(format!("音量を`{}`に設定しました。", vol_input))
         .await?;
     Ok(())
@@ -659,6 +666,110 @@ pub async fn play(
         }
     }
 
+    Ok(())
+}
+
+fn get_command_prefix<'a>(
+    ctx: poise::PartialContext<'a, Data, Error>,
+) -> poise::BoxFuture<'a, Result<Option<String>, Error>> {
+    Box::pin(async move {
+        let prefix = match ctx.guild_id {
+            Some(gid) => get_guild_settings(ctx.data, gid).await.command_prefix,
+            None => DEFAULT_PREFIX.to_string(),
+        };
+        Ok(Some(prefix))
+    })
+}
+
+fn permission_from_str(s: &str) -> serenity::Permissions {
+    match s {
+        "administrator" => serenity::Permissions::ADMINISTRATOR,
+        _ => serenity::Permissions::MANAGE_GUILD,
+    }
+}
+
+async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let settings = get_guild_settings(ctx.data(), guild_id).await;
+    let required = permission_from_str(&settings.admin_permission);
+
+    let Some(member) = ctx.author_member().await else {
+        return Ok(false);
+    };
+
+    let permissions = ctx
+        .guild()
+        .map(|g| g.member_permissions(&*member))
+        .unwrap_or(serenity::Permissions::empty());
+
+    Ok(permissions.contains(required))
+}
+
+async fn get_guild_settings(data: &Data, guild_id: serenity::GuildId) -> db::guild_settings::Model {
+    {
+        let cache = data.guild_settings_cache.read().await;
+        if let Some(settings) = cache.get(&guild_id) {
+            return settings.clone();
+        }
+    }
+
+    let settings = db::guild_settings::Entity::find()
+        .filter(db::guild_settings::Column::GuildId.eq(guild_id.get() as i64))
+        .one(&data.db)
+        .await
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| db::guild_settings::Model::default_for_guild(guild_id.get() as i64));
+
+    data.guild_settings_cache
+        .write()
+        .await
+        .insert(guild_id, settings.clone());
+
+    settings
+}
+
+async fn reply_no_permission(ctx: &Context<'_>) -> Result<(), Error> {
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description("このコマンドを使用する権限がありません。")
+                .color(colors::ERROR),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+async fn upsert_guild_setting<F>(
+    data: &Data,
+    guild_id: serenity::GuildId,
+    update_fn: F,
+) -> Result<(), Error>
+where
+    F: FnOnce(&mut db::guild_settings::ActiveModel),
+{
+    let existing = db::guild_settings::Entity::find()
+        .filter(db::guild_settings::Column::GuildId.eq(guild_id.get() as i64))
+        .one(&data.db)
+        .await?;
+
+    let updated = if let Some(model) = existing {
+        let mut active: db::guild_settings::ActiveModel = model.into();
+        update_fn(&mut active);
+        active.update(&data.db).await?
+    } else {
+        let mut active: db::guild_settings::ActiveModel =
+            db::guild_settings::Model::default_for_guild(guild_id.get() as i64).into();
+        update_fn(&mut active);
+        active.insert(&data.db).await?
+    };
+
+    data.guild_settings_cache
+        .write()
+        .await
+        .insert(guild_id, updated);
     Ok(())
 }
 
@@ -860,7 +971,420 @@ async fn autocomplete_voice_style<'a>(
         .collect()
 }
 
-#[poise::command(slash_command, subcommands("us_speaker", "us_pitch", "us_speed", "us_intonation", "us_reset"))]
+#[poise::command(
+    slash_command,
+    subcommands(
+        "server_admin_permission",
+        "server_reply_type",
+        "server_command_prefix"
+    )
+)]
+pub async fn server_setting(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+async fn autocomplete_permission<'a>(
+    _ctx: Context<'_>,
+    partial: &'a str,
+) -> impl Iterator<Item = serenity::builder::AutocompleteChoice> + 'a {
+    [
+        ("サーバーの管理（manage_guild）", "manage_guild"),
+        ("管理者（administrator）", "administrator"),
+    ]
+    .into_iter()
+    .filter(move |(label, _)| partial.is_empty() || label.contains(partial))
+    .map(|(label, value)| serenity::builder::AutocompleteChoice::new(label, value))
+}
+
+#[poise::command(slash_command, rename = "permission")]
+async fn server_admin_permission(
+    ctx: Context<'_>,
+    #[autocomplete = "autocomplete_permission"] permission: String,
+) -> Result<(), Error> {
+    let Some(member) = ctx.author_member().await else {
+        return reply_no_permission(&ctx).await;
+    };
+    let has_permission = ctx
+        .guild()
+        .map(|g| {
+            g.member_permissions(&*member)
+                .contains(serenity::Permissions::MANAGE_GUILD)
+        })
+        .unwrap_or(false);
+    if !has_permission {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(ctx.data(), guild_id, |m| {
+        m.admin_permission = Set(permission.clone());
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "サーバー設定の管理権限を`{}`に設定しました。",
+                    permission
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "reply_type")]
+async fn server_reply_type(
+    ctx: Context<'_>,
+    #[min = 0]
+    #[max = 3]
+    reply_type: i32,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(ctx.data(), guild_id, |m| {
+        m.reply_prefix_type = Set(reply_type);
+    })
+    .await?;
+
+    let label = match reply_type {
+        0 => "なし",
+        1 => "「返信」",
+        2 => "「○○への返信」",
+        3 => "「○○の××への返信",
+        _ => unreachable!(),
+    };
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("返信形式を`{}`に設定しました。", label))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "command_prefix")]
+async fn server_command_prefix(ctx: Context<'_>, prefix: String) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(ctx.data(), guild_id, |m| {
+        m.command_prefix = Set(prefix.clone());
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("プレフィックスを`{}`に設定しました。", prefix))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(
+    slash_command,
+    subcommands(
+        "server_speaker_id",
+        "server_voice_speed",
+        "server_voice_pitch",
+        "server_voice_intonation",
+        "server_voice_reset"
+    )
+)]
+pub async fn server_voice(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "default_speaker_id")]
+async fn server_speaker_id(
+    ctx: Context<'_>,
+    #[autocomplete = "autocomplete_voice_style"] style_id: u32,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+    if !ctx
+        .data()
+        .voice_styles
+        .iter()
+        .any(|vs| vs.style_id == style_id)
+    {
+        ctx.send(
+            poise::CreateReply::default().ephemeral(true).embed(
+                serenity::CreateEmbed::new()
+                    .description(format!(
+                        "`{}`は存在しません。/voice_stylesで確認してください。",
+                        style_id
+                    ))
+                    .color(colors::ERROR),
+            ),
+        )
+        .await?;
+        return Ok(());
+    }
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(ctx.data(), guild_id, |m| {
+        m.default_speaker_id = Set(Some(style_id as i32));
+    })
+    .await?;
+
+    let label = ctx
+        .data()
+        .voice_styles
+        .iter()
+        .find(|vs| vs.style_id == style_id)
+        .map(|vs| vs.display_label.as_str())
+        .unwrap_or("不明");
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "サーバーのデフォルト話者を`{}`に設定しました。",
+                    label
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "default_speed")]
+async fn server_voice_speed(
+    ctx: Context<'_>,
+    #[min = 0.5]
+    #[max = 2.0]
+    speed: f32,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(&ctx.data(), guild_id, |m| {
+        m.default_speed = Set(Some(speed));
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "サーバーのデフォルト速度を`{:.2}`に設定しました。",
+                    speed
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "default_pitch")]
+async fn server_voice_pitch(
+    ctx: Context<'_>,
+    #[min = -0.15]
+    #[max = 0.15]
+    pitch: f32,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(&ctx.data(), guild_id, |m| {
+        m.default_pitch = Set(Some(pitch));
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "サーバーのデフォルト音高を`{:.2}`に設定しました。",
+                    pitch
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "default_intonation")]
+async fn server_voice_intonation(
+    ctx: Context<'_>,
+    #[min = 0.0]
+    #[max = 2.0]
+    intonation: f32,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(&ctx.data(), guild_id, |m| {
+        m.default_pitch = Set(Some(intonation));
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "サーバーのデフォルト音高を`{:.2}`に設定しました。",
+                    intonation
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "reset")]
+async fn server_voice_reset(ctx: Context<'_>) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    upsert_guild_setting(&ctx.data(), guild_id, |m| {
+        m.default_speaker_id = Set(None);
+        m.default_speed = Set(None);
+        m.default_pitch = Set(None);
+        m.default_intonation = Set(None);
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description("サーバーのデフォルト音声設定をリセットしました。")
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+    Ok(())
+}
+
+const BOOL_SERVER_SETTINGS: &[(&str, &str)] = &[
+    ("read_embed", "embedの中身を読む"),
+    (
+        "read_non_vc_user",
+        "VCに参加していないユーザーのメッセージを読む",
+    ),
+    (
+        "read_server_muted",
+        "サーバーミュートされたユーザーのメッセージを読む",
+    ),
+    ("read_username", "メッセージの先頭に送信者の名前を読む"),
+    ("read_spoiler", "スポイラーの中身を読む"),
+    ("read_only_mentioned", "botがメンションされた時だけ読む"),
+    ("read_silent", "@silentが付与されたメッセージを読む"),
+    ("read_vc_join", "VC参加を読み上げる"),
+    ("read_vc_leave", "VC退出を読み上げる"),
+    ("read_vc_move", "別のVCの状態を読み上げる"),
+    ("read_vc_camera_on", "カメラONを読み上げる"),
+    ("read_vc_camera_off", "カメラOFFを読み上げる"),
+    ("read_vc_stream_start", "画面共有の開始を読み上げる"),
+    ("read_vc_stream_stop", "画面共有の終了を読み上げる"),
+    ("music_enabled", "音楽再生機能を有効化する"),
+    ("restrict_music_skip", "他人の曲のスキップを制限する"),
+];
+
+async fn autocomplete_server_settings<'a>(
+    _ctx: Context<'_>,
+    partial: &'a str,
+) -> impl Iterator<Item = serenity::builder::AutocompleteChoice> + 'a {
+    BOOL_SERVER_SETTINGS
+        .iter()
+        .filter(move |(_, label)| partial.is_empty() || label.contains(partial))
+        .map(|(key, label)| serenity::builder::AutocompleteChoice::new(*label, *key))
+}
+
+#[poise::command(slash_command)]
+pub async fn server_settings(
+    ctx: Context<'_>,
+    #[autocomplete = "autocomplete_server_settings"] setting: String,
+    value: bool,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let label = BOOL_SERVER_SETTINGS
+        .iter()
+        .find(|(k, _)| *k == setting.as_str())
+        .map(|(_, l)| *l);
+
+    let Some(label) = label else {
+        ctx.send(
+            poise::CreateReply::default().ephemeral(true).embed(
+                serenity::CreateEmbed::new()
+                    .description("不明な設定項目です。")
+                    .color(colors::ERROR),
+            ),
+        )
+        .await?;
+        return Ok(());
+    };
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+
+    upsert_guild_setting(&ctx.data(), guild_id, |m| match setting.as_str() {
+        "read_embed" => m.read_embed = Set(value),
+        "read_non_vc_user" => m.read_non_vc_user = Set(value),
+        "read_server_muted" => m.read_server_muted = Set(value),
+        "read_username" => m.read_username = Set(value),
+        "read_spoiler" => m.read_spoiler = Set(value),
+        "read_only_mentioned" => m.read_only_mentioned = Set(value),
+        "read_silent" => m.read_silent = Set(value),
+        "read_vc_join" => m.read_vc_join = Set(value),
+        "read_vc_leave" => m.read_vc_leave = Set(value),
+        "read_vc_move" => m.read_vc_move = Set(value),
+        "read_vc_camera_on" => m.read_vc_camera_on = Set(value),
+        "read_vc_camera_off" => m.read_vc_camera_off = Set(value),
+        "read_vc_stream_start" => m.read_vc_stream_start = Set(value),
+        "read_vc_stream_stop" => m.read_vc_stream_stop = Set(value),
+        "music_enabled" => m.music_enabled = Set(value),
+        "restrict_music_skip" => m.restrict_music_skip = Set(value),
+        _ => {}
+    })
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "**{}**を`{}`に設定しました。",
+                    label,
+                    if value { "ON" } else { "OFF" }
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(
+    slash_command,
+    subcommands("us_speaker", "us_pitch", "us_speed", "us_intonation", "us_reset")
+)]
 pub async fn user_setting(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
@@ -868,8 +1392,7 @@ pub async fn user_setting(_: Context<'_>) -> Result<(), Error> {
 #[poise::command(slash_command, rename = "speaker")]
 async fn us_speaker(
     ctx: Context<'_>,
-    #[autocomplete = "autocomplete_voice_style"]
-    style_id: u32,
+    #[autocomplete = "autocomplete_voice_style"] style_id: u32,
 ) -> Result<(), Error> {
     if !ctx
         .data()
@@ -932,8 +1455,11 @@ async fn us_speed(
 ) -> Result<(), Error> {
     use sea_orm::ActiveValue::Set;
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
-    let user_id  = ctx.author().id.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
+    let user_id = ctx.author().id.get() as i64;
 
     upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
         m.speed = Set(Some(speed));
@@ -941,13 +1467,11 @@ async fn us_speed(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default()
-            .ephemeral(true)
-            .embed(
-                serenity::CreateEmbed::new()
-                    .description(format!("速度を `{:.2}` に設定しました。", speed))
-                    .color(colors::SUCCEED),
-            ),
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("速度を `{:.2}` に設定しました。", speed))
+                .color(colors::SUCCEED),
+        ),
     )
     .await?;
     Ok(())
@@ -963,8 +1487,11 @@ async fn us_pitch(
 ) -> Result<(), Error> {
     use sea_orm::ActiveValue::Set;
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
-    let user_id  = ctx.author().id.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
+    let user_id = ctx.author().id.get() as i64;
 
     upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
         m.pitch = Set(Some(pitch));
@@ -972,13 +1499,11 @@ async fn us_pitch(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default()
-            .ephemeral(true)
-            .embed(
-                serenity::CreateEmbed::new()
-                    .description(format!("音高を `{:.2}` に設定しました。", pitch))
-                    .color(colors::SUCCEED),
-            ),
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("音高を `{:.2}` に設定しました。", pitch))
+                .color(colors::SUCCEED),
+        ),
     )
     .await?;
     Ok(())
@@ -994,8 +1519,11 @@ async fn us_intonation(
 ) -> Result<(), Error> {
     use sea_orm::ActiveValue::Set;
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
-    let user_id  = ctx.author().id.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
+    let user_id = ctx.author().id.get() as i64;
 
     upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
         m.intonation = Set(Some(intonation));
@@ -1003,13 +1531,11 @@ async fn us_intonation(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default()
-            .ephemeral(true)
-            .embed(
-                serenity::CreateEmbed::new()
-                    .description(format!("抑揚を `{:.2}` に設定しました。", intonation))
-                    .color(colors::SUCCEED),
-            ),
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("抑揚を `{:.2}` に設定しました。", intonation))
+                .color(colors::SUCCEED),
+        ),
     )
     .await?;
     Ok(())
@@ -1019,25 +1545,26 @@ async fn us_intonation(
 async fn us_reset(ctx: Context<'_>) -> Result<(), Error> {
     use sea_orm::ActiveValue::Set;
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
-    let user_id  = ctx.author().id.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
+    let user_id = ctx.author().id.get() as i64;
 
     upsert_user_setting(&ctx.data().db, guild_id, user_id, |m| {
         m.speaker_id = Set(None);
-        m.speed      = Set(None);
-        m.pitch      = Set(None);
+        m.speed = Set(None);
+        m.pitch = Set(None);
         m.intonation = Set(None);
     })
     .await?;
 
     ctx.send(
-        poise::CreateReply::default()
-            .ephemeral(true)
-            .embed(
-                serenity::CreateEmbed::new()
-                    .description("個人設定をリセットしました。")
-                    .color(colors::SUCCEED),
-            ),
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description("個人設定をリセットしました。")
+                .color(colors::SUCCEED),
+        ),
     )
     .await?;
     Ok(())
@@ -1203,7 +1730,19 @@ async fn age(
     Ok(())
 }
 
-async fn on_ready(_ctx: &serenity::Context, data_about_bot: &serenity::Ready) -> Result<(), Error> {
+async fn on_ready(
+    _ctx: &serenity::Context,
+    data_about_bot: &serenity::Ready,
+    data: &Data,
+) -> Result<(), Error> {
+    let all_settings = db::guild_settings::Entity::find().all(&data.db).await?;
+
+    let mut cache = data.guild_settings_cache.write().await;
+    for settings in all_settings {
+        let guild_id = serenity::GuildId::new(settings.guild_id as u64);
+        cache.insert(guild_id, settings);
+    }
+
     tracing::info!("ready, logged in as {}", data_about_bot.user.name);
     Ok(())
 }
@@ -1325,13 +1864,13 @@ async fn on_voice_state_update(
         return Ok(());
     };
 
+    let guild_settings = get_guild_settings(&data, guild_id).await;
+
     let get_channel_name = |chan_id: serenity::ChannelId| -> String {
-        if let Some(guild) = ctx.cache.guild(guild_id) {
-            if let Some(channel) = guild.channels.get(&chan_id) {
-                return channel.name.clone();
-            }
-        }
-        "不明なチャンネル".to_string()
+        ctx.cache
+            .guild(guild_id)
+            .and_then(|g| g.channels.get(&chan_id).map(|c| c.name.clone()))
+            .unwrap_or_else(|| "不明なチャンネル".to_string())
     };
 
     let member_name = member.display_name();
@@ -1340,19 +1879,33 @@ async fn on_voice_state_update(
     let text_to_read = match (old_channel_id, new_channel_id) {
         (None, Some(new_id)) => {
             if new_id.get() == bot_channel_id.get() {
-                Some(format!("{}が参加しました", member_name))
+                guild_settings
+                    .read_vc_join
+                    .then(|| format!("{}が参加しました", member_name))
             } else {
-                let chan_name = get_channel_name(new_id);
-                Some(format!("{}が{}に参加しました", member_name, chan_name))
+                guild_settings.read_vc_move.then(|| {
+                    format!(
+                        "{}が{}に参加しました",
+                        member_name,
+                        get_channel_name(new_id),
+                    )
+                })
             }
         }
         (Some(old_id), None) => {
             if old_id.get() == bot_channel_id.get() {
                 should_check_auto_disconnect = true;
-                Some(format!("{}が退出しました", member_name))
+                guild_settings
+                    .read_vc_leave
+                    .then(|| format!("{}が退出しました", member_name))
             } else {
-                let chan_name = get_channel_name(old_id);
-                Some(format!("{}が{}から退出しました", member_name, chan_name))
+                guild_settings.read_vc_move.then(|| {
+                    format!(
+                        "{}が{}から退出しました",
+                        member_name,
+                        get_channel_name(old_id),
+                    )
+                })
             }
         }
         (Some(old_id), Some(new_id)) => {
@@ -1364,19 +1917,38 @@ async fn on_voice_state_update(
                 let new_video = new.self_video;
 
                 if !old_stream && new_stream {
-                    Some(format!("{}が配信を開始しました", member_name))
+                    guild_settings
+                        .read_vc_stream_start
+                        .then(|| format!("{}が配信を開始しました", member_name))
+                } else if old_stream && !new_stream {
+                    guild_settings
+                        .read_vc_stream_stop
+                        .then(|| format!("{}が配信を終了しました", member_name))
                 } else if !old_video && new_video {
-                    Some(format!("{}がカメラをオンにしました", member_name))
+                    guild_settings
+                        .read_vc_camera_on
+                        .then(|| format!("{}がカメラをオンにしました", member_name))
+                } else if old_video && !new_video {
+                    guild_settings
+                        .read_vc_camera_off
+                        .then(|| format!("{}がカメラをオフにしました", member_name))
                 } else {
                     None
                 }
             } else {
                 if new_id.get() == bot_channel_id.get() {
-                    Some(format!("{}が参加しました", member_name))
+                    guild_settings
+                        .read_vc_join
+                        .then(|| format!("{}が参加しました", member_name))
                 } else {
                     should_check_auto_disconnect = true;
-                    let chan_name = get_channel_name(new_id);
-                    Some(format!("{}が{}に参加しました", member_name, chan_name))
+                    guild_settings.read_vc_move.then(|| {
+                        format!(
+                            "{}が{}に参加しました",
+                            member_name,
+                            get_channel_name(new_id),
+                        )
+                    })
                 }
             }
         }
@@ -1391,37 +1963,35 @@ async fn on_voice_state_update(
         return Ok(());
     }
 
-    let member_count = {
-        let mut count = 0;
-        if let Some(guild) = ctx.cache.guild(guild_id) {
-            for (user_id, state) in &guild.voice_states {
-                if state.channel_id.map(|c| c.get()) == Some(bot_channel_id.into()) {
-                    let is_bot = ctx.cache.user(*user_id).map(|u| u.bot).unwrap_or(false);
-                    if !is_bot {
-                        count += 1;
-                    }
+    let voice_to_text_map = data.voice_to_text_map.read().await;
+    if let Some(call_lock) = manager.get(guild_id) {
+        let call = call_lock.lock().await;
+        if let Some(current_channel) = call.current_channel() {
+            if let Some(guild) = ctx.cache.guild(guild_id) {
+                let member_count = guild
+                    .voice_states
+                    .values()
+                    .filter(|vs| {
+                        vs.channel_id.map(|c| c.get()) == Some(current_channel.0.get())
+                    })
+                    .filter(|vs| {
+                        !guild
+                            .members
+                            .get(&vs.user_id)
+                            .map(|m| m.user.bot)
+                            .unwrap_or(false)
+                    })
+                    .count();
+
+                if member_count == 0 {
+                    drop(call);
+                    drop(voice_to_text_map);
+                    let channel_id = serenity::ChannelId::new(current_channel.0.get());
+                    manager.remove(guild_id).await.ok();
+                    let mut map = data.voice_to_text_map.write().await;
+                    map.remove(&channel_id);
                 }
             }
-        }
-        count
-    };
-
-    if member_count == 0 {
-        let _ = manager.remove(guild_id).await;
-
-        let command_channel = {
-            let mut map = data.voice_to_text_map.write().await;
-            map.remove(&serenity::ChannelId::from(bot_channel_id))
-                .map(|info| info.command_channel)
-        };
-
-        if let Some(channel_id) = command_channel {
-            let _ = channel_id
-                .say(
-                    &ctx.http,
-                    "No users left in the voice channel; automatically disconnected.",
-                )
-                .await;
         }
     }
 
@@ -1466,16 +2036,18 @@ async fn main() {
                 volume(),
                 user_setting(),
                 voice_styles(),
+                server_setting(),
+                server_settings(),
             ],
             prefix_options: poise::PrefixFrameworkOptions {
-                prefix: Some("!".into()),
+                dynamic_prefix: Some(get_command_prefix),
                 ..Default::default()
             },
             event_handler: |ctx, event, _framework, data| {
                 Box::pin(async move {
                     match event {
                         serenity::FullEvent::Ready { data_about_bot } => {
-                            on_ready(ctx, &data_about_bot).await?;
+                            on_ready(ctx, &data_about_bot, &data).await?;
                         }
                         serenity::FullEvent::Message { new_message } => {
                             on_message(ctx, new_message, data).await?;
@@ -1556,6 +2128,7 @@ async fn main() {
                     synthesizer: Arc::new(synthesizer),
                     db,
                     voice_styles,
+                    guild_settings_cache: Arc::new(RwLock::new(HashMap::new())),
                 })
             })
         })
