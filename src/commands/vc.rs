@@ -1,0 +1,153 @@
+use crate::types::{Error, Context, VoiceContextInfo, colors};
+use crate::tts::play_voicevox;
+use poise::serenity_prelude as serenity;
+
+#[poise::command(slash_command, subcommands("connect"))]
+pub async fn vc(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+pub async fn join_vc(
+    ctx: Context<'_>,
+    guild_id: serenity::GuildId,
+    channel_id: serenity::ChannelId,
+) -> Result<(), Error> {
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+    let _handler = manager.join(guild_id, channel_id).await;
+
+    let mut map = ctx.data().voice_to_text_map.write().await;
+    map.insert(
+        channel_id,
+        VoiceContextInfo {
+            command_channel: ctx.channel_id(),
+            text_channels: std::collections::HashSet::from([ctx.channel_id()]),
+        },
+    );
+
+    let bot_name = ctx.cache().current_user().name.clone();
+    let text = format!("{}が参加しました", bot_name);
+    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data(), None).await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command)]
+pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("This command is usable only in a guild.")?;
+
+    let user_voice_state = ctx
+        .guild()
+        .and_then(|g| g.voice_states.get(&ctx.author().id).cloned());
+    let connect_channel_id = match user_voice_state.and_then(|v| v.channel_id) {
+        Some(id) => id,
+        None => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("コマンドを使用するにはVCに参加してください。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+            return Ok(());
+        }
+    };
+
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird")
+        .clone();
+
+    if let Some(call_lock) = manager.get(guild_id) {
+        let current_channel = {
+            let call = call_lock.lock().await;
+            call.current_channel()
+        };
+
+        if current_channel.is_some() {
+            let ctx_id = ctx.id();
+            let move_button_id = format!("move{}", ctx_id);
+
+            let reply = ctx
+                .send(
+                    poise::CreateReply::default()
+                        .embed(
+                            serenity::CreateEmbed::new()
+                                .description(
+                                    "別のボイスチャンネルに既に参加しています。移動しますか？",
+                                )
+                                .color(colors::WARN),
+                        )
+                        .components(vec![serenity::CreateActionRow::Buttons(vec![
+                            serenity::CreateButton::new(&move_button_id)
+                                .label("移動する")
+                                .style(serenity::ButtonStyle::Primary),
+                        ])]),
+                )
+                .await?;
+
+            let interaction = reply
+                .message()
+                .await?
+                .await_component_interaction(ctx.serenity_context())
+                .author_id(ctx.author().id)
+                .timeout(std::time::Duration::from_secs(30))
+                .filter(move |m| m.data.custom_id == move_button_id)
+                .await;
+
+            if let Some(mci) = interaction {
+                join_vc(ctx, guild_id, connect_channel_id).await?;
+
+                mci.create_response(
+                    &ctx.serenity_context(),
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        (serenity::CreateInteractionResponseMessage::new().embed(
+                            serenity::CreateEmbed::new()
+                                .description("ボイスチャンネルを移動しました。")
+                                .color(colors::SUCCEED),
+                        ))
+                        .components(vec![]),
+                    ),
+                )
+                .await?;
+            } else {
+                reply
+                    .edit(
+                        ctx,
+                        poise::CreateReply::default()
+                            .embed(
+                                serenity::CreateEmbed::new()
+                                    .description("タイムアウトしました。")
+                                    .color(colors::INFO),
+                            )
+                            .components(vec![]),
+                    )
+                    .await?;
+            }
+            return Ok(());
+        }
+    }
+
+    join_vc(ctx, guild_id, connect_channel_id).await?;
+    let embed = serenity::CreateEmbed::new()
+        .title(format!("<#{}>に接続しました。", connect_channel_id.get()))
+        .color(colors::SUCCEED)
+        .field(
+            "通知送信先",
+            format!("<#{}>", ctx.channel_id().get()),
+            false,
+        )
+        .field(
+            "読み上げ対象",
+            format!("<#{}>", ctx.channel_id().get()),
+            false,
+        );
+
+    ctx.send(poise::CreateReply::default().embed(embed)).await?;
+
+    Ok(())
+}
