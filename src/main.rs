@@ -4,7 +4,7 @@ use poise::serenity_prelude as serenity;
 use regex::Regex;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, ConnectionTrait, Database, DatabaseConnection,
-    DbBackend, EntityTrait, QueryFilter, Schema,
+    DbBackend, EntityTrait, ModelTrait, QueryFilter, Schema,
 };
 use songbird::SerenityInit;
 use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, TrackEvent};
@@ -86,7 +86,7 @@ static CODEBLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 //static INLINE_CODE_REGEX: LazyLock<Regex> =
 //    LazyLock::new(|| Regex::new(r"`([^`]+)`").expect("failed to compile regex inline-code"));
 static SPOILER_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?s)\|\|.*?\|\|").expect("failed to compile regex spoiler"));
+    LazyLock::new(|| Regex::new(r"(?s)\|\|(.*?)\|\|").expect("failed to compile regex spoiler"));
 static QUOTE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?m)^>{1,3}\s?").expect("failed to compile regex quote"));
 static NEWLINE_REGEX: LazyLock<Regex> =
@@ -1570,6 +1570,155 @@ async fn us_reset(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+#[poise::command(slash_command, subcommands("bw_add", "bw_remove", "bw_list"))]
+pub async fn bot_whitelist(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "add")]
+async fn bw_add(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    if !bot.bot {
+        ctx.send(
+            poise::CreateReply::default().ephemeral(true).embed(
+                serenity::CreateEmbed::new()
+                    .description("指定されたユーザーはbotではありません。")
+                    .color(colors::ERROR),
+            ),
+        )
+        .await?;
+        return Ok(());
+    }
+
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
+    let bot_id = bot.id.get() as i64;
+
+    let exists = db::bot_whitelist::Entity::find()
+        .filter(db::bot_whitelist::Column::GuildId.eq(guild_id))
+        .filter(db::bot_whitelist::Column::BotId.eq(bot_id))
+        .one(&ctx.data().db)
+        .await?
+        .is_some();
+
+    if exists {
+        ctx.send(
+            poise::CreateReply::default().ephemeral(true).embed(
+                serenity::CreateEmbed::new()
+                    .description(format!("`{}`は既に登録されています。", bot.name))
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
+        return Ok(());
+    }
+
+    db::bot_whitelist::ActiveModel {
+        guild_id: Set(guild_id),
+        bot_id: Set(bot_id),
+    }
+    .insert(&ctx.data().db)
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
+                .description(format!("`{}`をホワイトリストに登録しました。", bot.name,))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "remove")]
+async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let bot_id = bot.id.get() as i64;
+
+    let record = db::bot_whitelist::Entity::find()
+        .filter(db::bot_whitelist::Column::GuildId.eq(guild_id))
+        .filter(db::bot_whitelist::Column::BotId.eq(bot_id))
+        .one(&ctx.data().db)
+        .await?;
+
+    match record {
+        None => {
+            ctx.send(
+                poise::CreateReply::default()
+                    .ephemeral(true)
+                    .embed(serenity::CreateEmbed::new()
+                        .description(format!(
+                            "`{}`は登録されていません。",
+                            bot.name,
+                        ))
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+        }
+        Some(model) => {
+            model.delete(&ctx.data().db).await?;
+            ctx.send(
+                poise::CreateReply::default()
+                    .ephemeral(true)
+                    .embed(serenity::CreateEmbed::new()
+                        .description(format!(
+                            "`{}`をホワイトリストから削除しました。",
+                            bot.name
+                        ))
+                        .color(colors::SUCCEED),
+                ),
+            )
+            .await?;
+        }
+    }
+
+    Ok(())
+}
+
+#[poise::command(slash_command, rename = "list",)]
+async fn bw_list(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let entries = db::bot_whitelist::Entity::find()
+        .filter(db::bot_whitelist::Column::GuildId.eq(guild_id))
+        .all(&ctx.data().db)
+        .await?;
+
+    let description = if entries.is_empty() {
+        "登録されているbotはありません。".to_string()
+    } else {
+        entries
+            .iter()
+            .map(|e| format!("- <@{}>", e.bot_id))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    ctx.send(
+        poise::CreateReply::default()
+            .ephemeral(true)
+            .embed(serenity::CreateEmbed::new()
+                .title("botホワイトリスト")
+                .description(description)
+                .color(colors::INFO),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
 #[poise::command(slash_command, subcommands("connect"))]
 pub async fn vc(_: Context<'_>) -> Result<(), Error> {
     Ok(())
@@ -1752,42 +1901,63 @@ async fn on_message(
     new_message: &serenity::Message,
     data: &Data,
 ) -> Result<(), Error> {
-    if new_message.author.bot {
+    let Some(guild_id) = new_message.guild_id else {
         return Ok(());
-    }
-    let guild_id = match new_message.guild_id {
-        Some(id) => id,
-        None => return Ok(()),
     };
 
-    let text_channel_id = new_message.channel_id;
-    let mut is_target = false;
-    {
-        let map = data.voice_to_text_map.read().await;
-        for info in map.values() {
-            if info.text_channels.contains(&text_channel_id) {
-                is_target = true;
-                break;
-            }
+    if new_message.author.bot {
+        let is_whitelisted = db::bot_whitelist::Entity::find()
+            .filter(db::bot_whitelist::Column::GuildId.eq(guild_id.get() as i64))
+            .filter(db::bot_whitelist::Column::BotId.eq(new_message.author.id.get() as i64))
+            .one(&data.db)
+            .await
+            .ok()
+            .flatten()
+            .is_some();
+        if !is_whitelisted {
+            return Ok(());
         }
     }
+
+    let is_target = {
+        let map = data.voice_to_text_map.read().await;
+        map.values()
+            .any(|info| info.text_channels.contains(&new_message.channel_id))
+    };
 
     if !is_target {
         return Ok(());
     }
 
-    let skip_server_muted_user = true;
+    let guild_settings = get_guild_settings(data, guild_id).await;
 
-    if skip_server_muted_user {
-        let is_server_muted = if let Some(guild) = ctx.cache.guild(guild_id) {
-            guild
-                .voice_states
-                .get(&new_message.author.id)
-                .map(|vs| vs.mute)
-                .unwrap_or(false)
-        } else {
-            false
-        };
+    if !guild_settings.read_silent {
+        let is_silent = new_message
+            .flags
+            .map(|f| f.contains(serenity::MessageFlags::SUPPRESS_NOTIFICATIONS))
+            .unwrap_or(false);
+        if is_silent {
+            return Ok(());
+        }
+    }
+
+    if !guild_settings.read_non_vc_user {
+        let is_in_vc = ctx
+            .cache
+            .guild(guild_id)
+            .map(|g| g.voice_states.contains_key(&new_message.author.id))
+            .unwrap_or(false);
+        if !is_in_vc {
+            return Ok(());
+        }
+    }
+
+    if !guild_settings.read_server_muted {
+        let is_server_muted = ctx
+            .cache
+            .guild(guild_id)
+            .and_then(|g| g.voice_states.get(&new_message.author.id).map(|vs| vs.mute))
+            .unwrap_or(false);
 
         if is_server_muted {
             return Ok(());
@@ -1816,7 +1986,27 @@ async fn on_message(
     }
 
     let mut text_to_read = format_message(new_message, ctx);
+
+    if guild_settings.read_spoiler {
+        text_to_read = SPOILER_REGEX.replace_all(&text_to_read, "$1").into_owned();
+    }
+
     text_to_read = sanitize_text(&text_to_read);
+
+    if guild_settings.read_username && !text_to_read.is_empty() {
+        let display_name = ctx
+            .cache
+            .guild(guild_id)
+            .and_then(|g| {
+                g.members
+                    .get(&new_message.author.id)
+                    .map(|m| m.display_name().to_string())
+            })
+            .unwrap_or_else(|| new_message.author.name.clone());
+
+        text_to_read = format!("{} {}", display_name, text_to_read);
+    }
+
     if !text_to_read.is_empty() {
         play_voicevox(
             ctx,
@@ -1827,6 +2017,7 @@ async fn on_message(
         )
         .await?;
     }
+
     Ok(())
 }
 
@@ -2090,6 +2281,10 @@ async fn main() {
                 let stmt_user =
                     builder.build(&schema.create_table_from_entity(db::user_settings::Entity));
                 let _ = db.execute(stmt_user).await;
+
+                let stmt_bot_whitelist =
+                    builder.build(&schema.create_table_from_entity(db::bot_whitelist::Entity));
+                let _ = db.execute(stmt_bot_whitelist).await;
 
                 let synthesizer = Synthesizer::builder(
                     Onnxruntime::load_once()
