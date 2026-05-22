@@ -6,6 +6,13 @@ use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
 
+const REPLY_PREFIX_TYPES: &[(i32, &str)] = &[
+    (0, "なし"),
+    (1, "「返信」"),
+    (2, "「○○への返信」"),
+    (3, "「○○の××への返信」"),
+];
+
 const BOOL_SERVER_SETTINGS: &[(&str, &str)] = &[
     ("read_embed", "embedの中身を読む"),
     (
@@ -86,8 +93,7 @@ async fn server_admin_permission(
 #[poise::command(slash_command, rename = "reply_type")]
 async fn server_reply_type(
     ctx: Context<'_>,
-    #[min = 0]
-    #[max = 3]
+    #[autocomplete = "autocomplete_reply_prefix"]
     reply_type: i32,
 ) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
@@ -414,4 +420,15 @@ async fn autocomplete_server_settings<'a>(
         .iter()
         .filter(move |(_, label)| partial.is_empty() || label.contains(partial))
         .map(|(key, label)| serenity::builder::AutocompleteChoice::new(*label, *key))
+}
+
+async fn autocomplete_reply_prefix<'a>(
+    _ctx: Context<'_>,
+    partial: &'a str,
+) -> impl Iterator<Item = serenity::builder::AutocompleteChoice> + 'a {
+    REPLY_PREFIX_TYPES
+        .iter()
+        .filter(move |(_, label)| partial.is_empty() || label.contains(partial))
+        .map(|(key, label)|
+        serenity::builder::AutocompleteChoice::new(*label, *key))
 }

@@ -136,7 +136,11 @@ pub async fn play_voicevox(
     Ok(())
 }
 
-pub fn format_message(message: &serenity::Message, ctx: &serenity::Context) -> String {
+pub fn format_message(
+    message: &serenity::Message,
+    ctx: &serenity::Context,
+    reply_prefix_type: i32,
+) -> String {
     let mut text = message.content.clone();
     let mut prefix = String::new();
 
@@ -154,7 +158,22 @@ pub fn format_message(message: &serenity::Message, ctx: &serenity::Context) -> S
                 author_name = global_name.clone();
             }
         }
-        prefix.push_str(&format!("{}への返信 ", author_name));
+
+        let prefix_text = match reply_prefix_type {
+            0 => String::new(),
+            1 => "返信 ".to_string(),
+            2 => format!("{}への返信 ", author_name),
+            3 => {
+                let content_preview: String = referenced.content.chars().take(20).collect();
+                if content_preview.is_empty() {
+                    format!("{}への返信 ", author_name)
+                } else {
+                    format!("{}の「{}」への返信 ", author_name, content_preview)
+                }
+            }
+            _ => format!("{}への返信", author_name),
+        };
+        prefix.push_str(&prefix_text);
     }
 
     if !message.message_snapshots.is_empty() {

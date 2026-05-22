@@ -170,3 +170,5 @@ async fn main() {
 
     client.start().await.expect("failed to start client");
 }
+
+// TODO: reply_prefix = 4のとき、××への返信の××にsanitize_text,format_messageを適用する

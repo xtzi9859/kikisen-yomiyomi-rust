@@ -94,7 +94,7 @@ pub async fn on_message(
         return Ok(());
     }
 
-    let mut text_to_read = format_message(new_message, ctx);
+    let mut text_to_read = format_message(new_message, ctx, guild_settings.reply_prefix_type);
 
     if guild_settings.read_spoiler {
         text_to_read = SPOILER_REGEX.replace_all(&text_to_read, "$1").into_owned();
@@ -103,22 +103,24 @@ pub async fn on_message(
     text_to_read = sanitize_text(&text_to_read);
 
     if guild_settings.read_embed {
-        let embed_text = new_message
-            .embeds
-            .iter()
-            .filter_map(|e| e.description.as_deref())
-            .map(|desc| sanitize_text(desc))
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>()
-            .join(" ");
-
-        if !embed_text.is_empty() {
-            if text_to_read.is_empty() {
-                text_to_read = embed_text;
+        text_to_read = {
+            let embed_text = new_message
+                .embeds
+                .iter()
+                .map(embed_to_text)
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .join(" ");
+            if !embed_text.is_empty() {
+                if text_to_read.is_empty() {
+                    embed_text
+                } else {
+                    format!("{} {}", text_to_read, embed_text)
+                }
             } else {
-                text_to_read = format!("{} {}", text_to_read, embed_text);
+                text_to_read
             }
-        }
+        };
     }
 
     if guild_settings.read_username && !text_to_read.is_empty() {
@@ -147,4 +149,49 @@ pub async fn on_message(
     }
 
     Ok(())
+}
+
+fn embed_to_text(embed: &serenity::Embed) -> String {
+    let mut parts: Vec<String> = Vec::new();
+
+    if let Some(author) = &embed.author {
+        let text = sanitize_text(&author.name);
+        if !text.is_empty() {
+            parts.push(text);
+        }
+    }
+
+    if let Some(title) = &embed.title {
+        let text = sanitize_text(title);
+        if !text.is_empty() {
+            parts.push(text);
+        }
+    }
+
+    for field in &embed.fields {
+        let name = sanitize_text(&field.name);
+        let value = sanitize_text(&field.value);
+        match (name.is_empty(), value.is_empty()) {
+            (false, false) => parts.push(format!("{} {}", name, value)),
+            (false, true) => parts.push(name),
+            (true, false) => parts.push(value),
+            (true, true) => {}
+        }
+    }
+
+    if let Some(footer) = &embed.footer {
+        let text = sanitize_text(&footer.text);
+        if !text.is_empty() {
+            parts.push(text);
+        }
+    }
+
+    if let Some(ts) = &embed.timestamp {
+        parts.push(format!(
+            "{}",
+            ts.timestamp()
+        ))
+    }
+
+    parts.join(" ")
 }
