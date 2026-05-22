@@ -102,6 +102,25 @@ pub async fn on_message(
 
     text_to_read = sanitize_text(&text_to_read);
 
+    if guild_settings.read_embed {
+        let embed_text = new_message
+            .embeds
+            .iter()
+            .filter_map(|e| e.description.as_deref())
+            .map(|desc| sanitize_text(desc))
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        if !embed_text.is_empty() {
+            if text_to_read.is_empty() {
+                text_to_read = embed_text;
+            } else {
+                text_to_read = format!("{} {}", text_to_read, embed_text);
+            }
+        }
+    }
+
     if guild_settings.read_username && !text_to_read.is_empty() {
         let display_name = ctx
             .cache
