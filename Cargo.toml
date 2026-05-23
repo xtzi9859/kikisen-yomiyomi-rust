@@ -7,6 +7,7 @@ edition = "2024"
 async-trait = "0.1.89"
 dotenvy = "0.15.7"
 emoji = { version = "0.2.1", features = ["ja"] }
+kanalizer = { git = "https://github.com/VOICEVOX/kanalizer", version = "0.0.0" }
 poise = "0.6.2"
 regex = "1.12.3"
 reqwest = "0.12"

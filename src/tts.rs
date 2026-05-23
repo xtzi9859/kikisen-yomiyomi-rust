@@ -27,6 +27,8 @@ pub(crate) static CHANNEL_MENTION_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"<#(\d+)>").expect("failed to compile regex channel-mention"));
 pub(crate) static CUSTOM_EMOJI_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"<a?:(\w+):\d+>").expect("failed to compile regex custom-emoji"));
+pub(crate) static ENGLISH_WORD_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"[a-zA-Z]+").expect("failed to compile regex english"));
 
 #[derive(Clone)]
 pub struct FileDeleter {
@@ -308,4 +310,21 @@ pub fn sanitize_text(text: &str) -> String {
     result = URL_REGEX.replace_all(&result, "URL").into_owned();
     result = NEWLINE_REGEX.replace_all(&result, " ").into_owned();
     result
+}
+
+pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
+    let kanalizer_options= kanalizer::ConvertOptions {
+        max_length: kanalizer::MaxLength::Auto,
+        strategy: kanalizer::Strategy::Greedy,
+        error_on_invalid_input: false,
+        error_on_incomplete: true,
+    };
+
+    ENGLISH_WORD_REGEX
+        .replace_all(text, |caps: &regex::Captures| {
+            kanalizer
+                .convert(&caps[0], &kanalizer_options)
+                .unwrap_or_else(|_| caps[0].to_string())
+        })
+        .into_owned()
 }

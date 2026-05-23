@@ -6,6 +6,7 @@ use poise::serenity_prelude as serenity;
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
+pub const DEVELOPPER_ID: i64 = 824257607052689428;
 pub const DEFAULT_SPEAKER_ID: i32 = 8;
 pub const DEFAULT_PREFIX: &str = "!";
 
@@ -37,4 +38,5 @@ pub struct Data {
     pub voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
     pub music_state: Arc<RwLock<HashMap<serenity::GuildId, Arc<RwLock<crate::music::MusicState>>>>>,
     pub guild_settings_cache: Arc<RwLock<HashMap<serenity::GuildId, crate::db::guild_settings::Model>>>,
+    pub kanalizer: kanalizer::Kanalizer,
 }

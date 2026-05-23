@@ -1,5 +1,5 @@
 use crate::types::{Data, Error};
-use crate::tts::{play_voicevox, format_message, sanitize_text, SPOILER_REGEX};
+use crate::tts::{SPOILER_REGEX, apply_kanalizer, format_message, play_voicevox, sanitize_text};
 use crate::helpers::get_guild_settings;
 use crate::db;
 use poise::serenity_prelude as serenity;
@@ -101,6 +101,8 @@ pub async fn on_message(
     }
 
     text_to_read = sanitize_text(&text_to_read);
+
+    text_to_read = apply_kanalizer(&text_to_read, &data.kanalizer);
 
     if guild_settings.read_embed {
         text_to_read = {
