@@ -164,7 +164,9 @@ pub fn format_message(
             1 => "返信 ".to_string(),
             2 => format!("{}への返信 ", author_name),
             3 => {
-                let content_preview: String = referenced.content.chars().take(20).collect();
+                let raw = format_message(referenced, ctx, 0);
+                let sanitized = sanitize_text(&raw);
+                let content_preview: String = sanitized.chars().take(20).collect();
                 if content_preview.is_empty() {
                     format!("{}への返信 ", author_name)
                 } else {
