@@ -216,7 +216,7 @@ pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command, aliases("vol"))]
 pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
     let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
-    if vol_input < 0.0 || vol_input > 100.0 {
+    if !vol_input.is_finite() || vol_input < 0.0 || vol_input > 100.0 {
         let _ = ctx.reply("音量は0～100の範囲内で入力してください。").await;
         return Ok(());
     }
