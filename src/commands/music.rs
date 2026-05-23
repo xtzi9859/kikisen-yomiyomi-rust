@@ -216,6 +216,11 @@ pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command, aliases("vol"))]
 pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
     let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    if vol_input < 0.0 || vol_input > 100.0 {
+        let _ = ctx.reply("音量は0～100の範囲内で入力してください。").await;
+        return Ok(());
+    }
+
     let actual_vol = (vol_input / 100.0).clamp(0.0, 1.0);
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
     let mut state = state_arc.write().await;
@@ -233,7 +238,7 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
         .await;
     }
 
-    ctx.say(format!("音量を`{}`に設定しました。", vol_input))
+    ctx.say(format!("音量を`{}`に設定しました。", vol_input.clamp(0.0, 100.0)))
         .await?;
     Ok(())
 }
