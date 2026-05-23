@@ -322,8 +322,14 @@ pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
 
     ENGLISH_WORD_REGEX
         .replace_all(text, |caps: &regex::Captures| {
+            let word = &caps[0];
+
+            if word.chars().all(|c| c.is_uppercase()) {
+                return word.to_string();
+            }
+
             kanalizer
-                .convert(&caps[0], &kanalizer_options)
+                .convert(&caps[0].to_lowercase(), &kanalizer_options)
                 .unwrap_or_else(|_| caps[0].to_string())
         })
         .into_owned()
