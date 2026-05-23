@@ -1,13 +1,41 @@
-use crate::types::{Error, Context};
-use crate::music::{MusicItem, play_next_music};
-use crate::helpers::upsert_guild_setting;
+use crate::helpers::{get_guild_settings, upsert_guild_setting};
+use crate::music::{MusicItem, MusicState, play_next_music};
+use crate::types::{Context, Error, Data};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
+use std::{collections::VecDeque, sync::Arc};
+use tokio::sync::RwLock;
 
 #[derive(serde::Deserialize)]
 pub(crate) struct YtdlOutput {
     title: String,
     webpage_url: String,
+}
+
+async fn get_guild_music_state(
+    data: &Data,
+    guild_id: serenity::GuildId,
+) -> Arc<RwLock<MusicState>> {
+    {
+        let states = data.music_state.read().await;
+        if let Some(state) = states.get(&guild_id) {
+            return state.clone();
+        }
+    }
+
+    let initial_vol = get_guild_settings(data, guild_id).await.default_music_vol;
+
+    let mut states = data.music_state.write().await;
+    states
+        .entry(guild_id)
+        .or_insert_with(|| {
+            Arc::new(RwLock::new(MusicState {
+                queue: VecDeque::new(),
+                current_track: None,
+                volume: initial_vol,
+            }))
+        })
+        .clone()
 }
 
 #[poise::command(prefix_command, aliases("p"))]
@@ -146,8 +174,9 @@ pub async fn play(
         ctx.say(format!("キューに追加しました: {}", item.title))
             .await?;
 
+        let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
         let should_play = {
-            let mut state = ctx.data().music_state.write().await;
+            let mut state = state_arc.write().await;
             state.queue.push_back(item);
             state.current_track.is_none()
         };
@@ -156,7 +185,7 @@ pub async fn play(
             play_next_music(
                 ctx.serenity_context(),
                 guild_id,
-                ctx.data().music_state.clone(),
+                state_arc,
                 ctx.data().voice_to_text_map.clone(),
             )
             .await?;
@@ -172,7 +201,9 @@ pub async fn play(
 
 #[poise::command(prefix_command, aliases("s"))]
 pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
-    let state = ctx.data().music_state.read().await;
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    let state = state_arc.read().await;
     if let Some(handle) = &state.current_track {
         let _ = handle.stop();
         ctx.say("スキップしました").await?;
@@ -184,8 +215,10 @@ pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("vol"))]
 pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
     let actual_vol = (vol_input / 100.0).clamp(0.0, 1.0);
-    let mut state = ctx.data().music_state.write().await;
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    let mut state = state_arc.write().await;
 
     state.volume = actual_vol;
     if let Some(handle) = &state.current_track {

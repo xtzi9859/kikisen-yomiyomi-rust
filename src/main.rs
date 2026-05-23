@@ -15,7 +15,6 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
 use tokio::sync::RwLock;
 use types::{Data, VoiceStyleInfo};
-use music::MusicState;
 
 const OPEN_JTALK_DIR: &str = "./voicevox_core/dict/open_jtalk_dic_utf_8-1.11";
 const ONNXRUNTIME_FILENAME: &str =
@@ -150,11 +149,7 @@ async fn main() {
                     synthesizer: Arc::new(synthesizer),
                     voice_styles,
                     voice_to_text_map: Arc::new(RwLock::new(HashMap::new())),
-                    music_state: Arc::new(RwLock::new(MusicState {
-                        queue: std::collections::VecDeque::new(),
-                        current_track: None,
-                        volume: 0.1,
-                    })),
+                    music_state: Arc::new(RwLock::new(HashMap::new())),
                     guild_settings_cache: Arc::new(RwLock::new(HashMap::new()),)
                 })
             })
