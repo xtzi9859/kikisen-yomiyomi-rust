@@ -119,3 +119,42 @@ pub mod bot_whitelist {
 
     impl ActiveModelBehavior for ActiveModel {}
 }
+
+pub mod auto_connections {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+    #[sea_orm(table_name = "auto_connections")]
+    pub struct Model {
+        #[sea_orm(primary_key, auto_increment = false)]
+        pub voice_channel_id: i64,
+
+        pub guild_id: i64,
+        pub notify_channel_id: i64,
+    }
+
+    #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+    pub enum Relation {}
+
+    impl ActiveModelBehavior for ActiveModel {}
+}
+
+pub mod reading_targets {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+    #[sea_orm(table_name = "reading_targets")]
+    pub struct Model {
+        #[sea_orm(primary_key)]
+        pub id: i32,
+
+        pub voice_channel_id: i64,
+        pub text_channel_id: i64,
+        pub guild_id: i64,
+    }
+
+    #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+    pub enum Relation {}
+
+    impl ActiveModelBehavior for ActiveModel {}
+}

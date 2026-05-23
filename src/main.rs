@@ -49,6 +49,7 @@ async fn main() {
         .options(poise::FrameworkOptions {
             commands: vec![
                 commands::age(),
+                commands::auto_connect(),
                 commands::vc(),
                 commands::restart(),
                 commands::play(),
@@ -106,6 +107,12 @@ async fn main() {
                 let stmt_bot_whitelist =
                     builder.build(&schema.create_table_from_entity(db::bot_whitelist::Entity));
                 let _ = db.execute(stmt_bot_whitelist).await;
+
+                let stmt_auto_connect = builder.build(&schema.create_table_from_entity(db::auto_connections::Entity));
+                let _ = db.execute(stmt_auto_connect).await;
+
+                let stmt_reading_targets = builder.build(&schema.create_table_from_entity(db::reading_targets::Entity));
+                let _ = db.execute(stmt_reading_targets).await;
 
                 let synthesizer = Synthesizer::builder(
                     Onnxruntime::load_once()
@@ -165,5 +172,3 @@ async fn main() {
 
     client.start().await.expect("failed to start client");
 }
-
-// TODO: reply_prefix = 4のとき、××への返信の××にsanitize_text,format_messageを適用する

@@ -1,9 +1,10 @@
-use crate::types::{Data, Error};
-use crate::tts::play_voicevox;
-use crate::helpers::get_guild_settings;
 use crate::db;
+use crate::helpers::get_guild_settings;
+use crate::tts::play_voicevox;
+use crate::types::{Data, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
-use sea_orm::EntityTrait;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use std::collections::HashSet;
 
 pub async fn on_ready(
     _ctx: &serenity::Context,
@@ -11,7 +12,6 @@ pub async fn on_ready(
     data: &Data,
 ) -> Result<(), Error> {
     let all_settings = db::guild_settings::Entity::find().all(&data.db).await?;
-
     let mut cache = data.guild_settings_cache.write().await;
     for settings in all_settings {
         let guild_id = serenity::GuildId::new(settings.guild_id as u64);
@@ -44,6 +44,94 @@ pub async fn on_voice_state_update(
     let manager = songbird::get(ctx)
         .await
         .expect("failed to initialize songbird");
+
+    if manager.get(guild_id).is_none() {
+        if let Some(new_ch) = new_channel_id {
+            let auto_connect_config = db::auto_connections::Entity::find_by_id(new_ch.get() as i64)
+                .one(&data.db)
+                .await
+                .ok()
+                .flatten();
+
+            if let Some(config) = auto_connect_config {
+                let member_count = {
+                    ctx.cache
+                        .guild(guild_id)
+                        .map(|g| {
+                            g.voice_states
+                                .values()
+                                .filter(|vs| vs.channel_id == Some(new_ch))
+                                .filter(|vs| {
+                                    !g.members
+                                        .get(&vs.user_id)
+                                        .map(|m| m.user.bot)
+                                        .unwrap_or(false)
+                                })
+                                .count()
+                        })
+                        .unwrap_or(0)
+                };
+
+                if member_count == 1 {
+                    let notify_id = serenity::ChannelId::new(config.notify_channel_id as u64);
+                    let reading_channels: HashSet<serenity::ChannelId> =
+                        db::reading_targets::Entity::find()
+                            .filter(
+                                db::reading_targets::Column::VoiceChannelId
+                                    .eq(config.voice_channel_id),
+                            )
+                            .all(&data.db)
+                            .await
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(|r| serenity::ChannelId::new(r.text_channel_id as u64))
+                            .collect();
+
+                    let _ = manager.join(guild_id, new_ch).await;
+
+                    let reading_list = reading_channels
+                        .iter()
+                        .map(|id| format!("<#{}>", id))
+                        .collect::<Vec<_>>()
+                        .join(" ");
+
+                    data.voice_to_text_map.write().await.insert(
+                        new_ch,
+                        VoiceContextInfo {
+                            command_channel: notify_id,
+                            text_channels: reading_channels,
+                        },
+                    );
+
+                    let _ = notify_id
+                        .send_message(
+                            &ctx.http,
+                            serenity::CreateMessage::new().embed(
+                                serenity::CreateEmbed::new()
+                                    .title("自動接続")
+                                    .description(format!("<#{}>に接続しました", new_ch))
+                                    .field("通知送信チャンネル", format!("<#{}>", notify_id), false)
+                                    .field("読み上げ対象", reading_list, false)
+                                    .color(colors::SUCCEED),
+                            ),
+                        )
+                        .await;
+
+                    let bot_name = ctx.cache.current_user().name.clone();
+                    let _ = play_voicevox(
+                        ctx,
+                        guild_id,
+                        &format!("{}が参加しました", bot_name),
+                        data,
+                        None,
+                    )
+                    .await;
+                }
+            }
+        }
+
+        return Ok(());
+    }
 
     let bot_channel_id = if let Some(call_lock) = manager.get(guild_id) {
         let call = call_lock.lock().await;
