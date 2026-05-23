@@ -290,7 +290,7 @@ async fn server_voice_intonation(
     }
     let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
-        m.default_pitch = Set(Some(intonation));
+        m.default_intonation = Set(Some(intonation));
     })
     .await?;
 
@@ -298,7 +298,7 @@ async fn server_voice_intonation(
         poise::CreateReply::default().ephemeral(true).embed(
             serenity::CreateEmbed::new()
                 .description(format!(
-                    "サーバーのデフォルト音高を`{:.2}`に設定しました。",
+                    "サーバーのデフォルト抑揚を`{:.2}`に設定しました。",
                     intonation
                 ))
                 .color(colors::SUCCEED),

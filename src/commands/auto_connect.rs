@@ -274,10 +274,10 @@ pub async fn auto_connect(
                 .filter(db::reading_targets::Column::VoiceChannelId.eq(vc_id))
                 .exec(&ctx.data().db)
                 .await?;
-            db::reading_targets::Entity::delete_many()
-                .filter(db::reading_targets::Column::VoiceChannelId.eq(vc_id))
+            db::auto_connections::Entity::delete_by_id(vc_id)
                 .exec(&ctx.data().db)
-                .await?;
+                .await
+                .ok();
 
             press.create_response(
                 serenity_ctx,
