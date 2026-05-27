@@ -6,7 +6,6 @@ use poise::serenity_prelude as serenity;
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-pub const DEVELOPPER_ID: i64 = 824257607052689428;
 pub const DEFAULT_SPEAKER_ID: i32 = 8;
 pub const DEFAULT_PREFIX: &str = "!";
 

@@ -60,8 +60,12 @@ where
 
 pub fn permission_from_str(s: &str) -> serenity::Permissions {
     match s {
+        "manage_messages" => serenity::Permissions::MANAGE_MESSAGES,
+        "manage_channels" => serenity::Permissions::MANAGE_CHANNELS,
+        "moderate_members" => serenity::Permissions::MODERATE_MEMBERS,
+        "manage_guild" => serenity::Permissions::MANAGE_GUILD,
         "administrator" => serenity::Permissions::ADMINISTRATOR,
-        _ => serenity::Permissions::MANAGE_GUILD,
+        _ => serenity::Permissions::ADMINISTRATOR,
     }
 }
 

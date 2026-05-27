@@ -39,7 +39,7 @@ async fn main() {
     tracing::info!("initialized logging system");
 
     dotenvy::dotenv().ok();
-    let token = std::env::var("TOKEN_YOMIYOMI").unwrap_or_else(|e| {
+    let token = std::env::var("DISCORD_TOKEN").unwrap_or_else(|e| {
         tracing::error!(error = ?e, "expected a token in the environment");
         std::process::exit(1);
     });

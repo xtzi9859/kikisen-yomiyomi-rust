@@ -404,6 +404,9 @@ async fn autocomplete_permission<'a>(
     partial: &'a str,
 ) -> impl Iterator<Item = serenity::builder::AutocompleteChoice> + 'a {
     [
+        ("メッセージの管理（manage_messages）", "manage_messages"),
+        ("チャンネルの管理（manage_channels）", "manage_channels"),
+        ("メンバーのタイムアウト（moderate_members）", "moderate_members"),
         ("サーバーの管理（manage_guild）", "manage_guild"),
         ("管理者（administrator）", "administrator"),
     ]
