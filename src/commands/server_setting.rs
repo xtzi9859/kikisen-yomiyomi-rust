@@ -345,8 +345,8 @@ pub async fn server_settings(
 
     let label = BOOL_SERVER_SETTINGS
         .iter()
-        .find(|(k, _)| *k == setting.as_str())
-        .map(|(_, l)| *l);
+        .find(|&&(k, _)| k == setting.as_str())
+        .map(|&(_, l)| l);
 
     let Some(label) = label else {
         ctx.send(
