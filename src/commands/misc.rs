@@ -3,12 +3,11 @@ use poise::serenity_prelude as serenity;
 
 #[poise::command(slash_command)]
 pub async fn restart(ctx: Context<'_>) -> Result<(), Error> {
-    let embed = serenity::CreateEmbed::new()
-        .color(colors::SUCCEED)
-        .description("再起動します…");
-
-    let reply = poise::CreateReply::default().embed(embed);
-    ctx.send(reply).await?;
+    ctx.send(poise::CreateReply::default()
+            .embed(serenity::CreateEmbed::new()
+                .color(colors::SUCCEED)
+                .description("再起動します…")
+    )).await?;
 
     tracing::info!("restart command executed; restarting...");
 
