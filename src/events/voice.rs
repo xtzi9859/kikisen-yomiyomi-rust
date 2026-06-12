@@ -1,6 +1,6 @@
 use crate::db;
 use crate::helpers::get_guild_settings;
-use crate::tts::play_voicevox;
+use crate::tts::{play_voicevox, apply_kanalizer};
 use crate::types::{Data, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -240,7 +240,7 @@ pub async fn on_voice_state_update(
     };
 
     if let Some(text) = text_to_read {
-        play_voicevox(ctx, guild_id, &text, data, Some(new.user_id)).await?;
+        play_voicevox(ctx, guild_id, &apply_kanalizer(&text, &data.kanalizer), data, Some(new.user_id)).await?;
     }
 
     if !should_check_auto_disconnect {
