@@ -14,6 +14,16 @@ pub async fn on_message(
         return Ok(());
     };
 
+    let is_target = {
+        let map = data.voice_to_text_map.read().await;
+        map.values()
+            .any(|info| info.text_channels.contains(&new_message.channel_id))
+    };
+
+    if !is_target {
+        return Ok(());
+    }
+
     if new_message.author.bot {
         let is_whitelisted = db::bot_whitelist::Entity::find()
             .filter(db::bot_whitelist::Column::GuildId.eq(guild_id.get() as i64))
@@ -26,16 +36,6 @@ pub async fn on_message(
         if !is_whitelisted {
             return Ok(());
         }
-    }
-
-    let is_target = {
-        let map = data.voice_to_text_map.read().await;
-        map.values()
-            .any(|info| info.text_channels.contains(&new_message.channel_id))
-    };
-
-    if !is_target {
-        return Ok(());
     }
 
     let guild_settings = get_guild_settings(data, guild_id).await;
@@ -67,7 +67,6 @@ pub async fn on_message(
             .guild(guild_id)
             .and_then(|g| g.voice_states.get(&new_message.author.id).map(|vs| vs.mute))
             .unwrap_or(false);
-
         if is_server_muted {
             return Ok(());
         }
@@ -136,7 +135,7 @@ pub async fn on_message(
             })
             .unwrap_or_else(|| new_message.author.name.clone());
 
-        text_to_read = format!("{} {}", display_name, text_to_read);
+        text_to_read = format!("{}のメッセージ {}", display_name, text_to_read);
     }
 
     if !text_to_read.is_empty() {
@@ -146,8 +145,7 @@ pub async fn on_message(
             &text_to_read,
             data,
             Some(new_message.author.id),
-        )
-        .await?;
+        ).await?;
     }
 
     Ok(())

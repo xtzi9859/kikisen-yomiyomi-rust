@@ -15,6 +15,17 @@ pub async fn join_vc(
     let manager = songbird::get(ctx.serenity_context())
         .await
         .expect("failed to initialize songbird");
+
+    if let Some(call_lock) = manager.get(guild_id) {
+        let call = call_lock.lock().await;
+        if let Some(old_channel) = call.current_channel() {
+            let old_channel_id = serenity::ChannelId::new(old_channel.0.get());
+            let mut map = ctx.data().voice_to_text_map.write().await;
+            map.remove(&old_channel_id);
+            
+        }
+    }
+
     let _handler = manager.join(guild_id, channel_id).await;
 
     let mut map = ctx.data().voice_to_text_map.write().await;

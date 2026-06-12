@@ -138,6 +138,7 @@ pub async fn play_voicevox(
     Ok(())
 }
 
+/// discordのメッセージを読み上げに適した形に整形する
 pub fn format_message(
     message: &serenity::Message,
     ctx: &serenity::Context,
@@ -292,6 +293,7 @@ pub fn format_message(
     format!("{}{}", prefix, text)
 }
 
+/// 正規表現を使ってmarkdown記号のパースをする
 pub fn sanitize_text(text: &str) -> String {
     let mut result = CODEBLOCK_REGEX
         .replace_all(text, |caps: &regex::Captures| {
@@ -309,9 +311,11 @@ pub fn sanitize_text(text: &str) -> String {
     result = QUOTE_REGEX.replace_all(&result, "引用 ").into_owned();
     result = URL_REGEX.replace_all(&result, "URL").into_owned();
     result = NEWLINE_REGEX.replace_all(&result, " ").into_owned();
+
     result
 }
 
+/// kanalizerを使用してテキスト中の英単語を一括でかなに変換する
 pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
     let kanalizer_options= kanalizer::ConvertOptions {
         max_length: kanalizer::MaxLength::Auto,

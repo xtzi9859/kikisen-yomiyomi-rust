@@ -29,6 +29,18 @@ pub async fn on_voice_state_update(
     data: &Data,
 ) -> Result<(), Error> {
     if new.user_id == ctx.cache.current_user().id {
+        if new.channel_id.is_none() {
+            if let Some(guild_id) = new.guild_id {
+                if let Some(old_vc) = old.as_ref().and_then(|v| v.channel_id) {
+                    let manager = songbird::get(ctx)
+                        .await
+                        .expect("failed to initialize songbird");
+                    manager.remove(guild_id).await.ok();
+                    data.voice_to_text_map.write().await.remove(&old_vc);
+                    
+                }
+            }
+        }
         return Ok(());
     }
 
