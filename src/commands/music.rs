@@ -1,6 +1,6 @@
 use crate::helpers::{get_guild_settings, upsert_guild_setting};
 use crate::music::{MusicItem, MusicState, play_next_music};
-use crate::types::{Context, Error, Data};
+use crate::types::{Context, Data, Error};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
 use std::{collections::VecDeque, sync::Arc};
@@ -238,8 +238,11 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
         .await;
     }
 
-    ctx.say(format!("音量を`{}`に設定しました。", vol_input.clamp(0.0, 100.0)))
-        .await?;
+    ctx.say(format!(
+        "音量を`{}`に設定しました。",
+        vol_input.clamp(0.0, 100.0)
+    ))
+    .await?;
     Ok(())
 }
 

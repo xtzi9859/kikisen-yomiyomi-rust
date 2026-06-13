@@ -1,9 +1,12 @@
-use crate::types::{Data, Error, Context, colors, DEFAULT_PREFIX};
 use crate::db;
+use crate::types::{Context, DEFAULT_PREFIX, Data, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
 
-pub async fn get_guild_settings(data: &Data, guild_id: serenity::GuildId) -> db::guild_settings::Model {
+pub async fn get_guild_settings(
+    data: &Data,
+    guild_id: serenity::GuildId,
+) -> db::guild_settings::Model {
     {
         let cache = data.guild_settings_cache.read().await;
         if let Some(settings) = cache.get(&guild_id) {

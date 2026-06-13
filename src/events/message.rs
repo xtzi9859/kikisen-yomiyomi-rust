@@ -1,7 +1,7 @@
-use crate::types::{Data, Error};
-use crate::tts::{SPOILER_REGEX, apply_kanalizer, format_message, play_voicevox, sanitize_text};
-use crate::helpers::get_guild_settings;
 use crate::db;
+use crate::helpers::get_guild_settings;
+use crate::tts::{SPOILER_REGEX, apply_kanalizer, format_message, play_voicevox, sanitize_text};
+use crate::types::{Data, Error};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
@@ -145,7 +145,8 @@ pub async fn on_message(
             &text_to_read,
             data,
             Some(new_message.author.id),
-        ).await?;
+        )
+        .await?;
     }
 
     Ok(())
@@ -187,10 +188,7 @@ fn embed_to_text(embed: &serenity::Embed) -> String {
     }
 
     if let Some(ts) = &embed.timestamp {
-        parts.push(format!(
-            "{}",
-            ts.timestamp()
-        ))
+        parts.push(format!("{}", ts.timestamp()))
     }
 
     parts.join(" ")

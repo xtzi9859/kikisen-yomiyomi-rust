@@ -1,12 +1,12 @@
-use crate::types::{Data, Error, DEFAULT_SPEAKER_ID};
 use crate::db;
+use crate::types::{DEFAULT_SPEAKER_ID, Data, Error};
 use poise::serenity_prelude as serenity;
 use regex::Regex;
-use unicode_segmentation::UnicodeSegmentation;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use songbird::events::{Event, EventContext, EventHandler, TrackEvent};
 use std::sync::{Arc, LazyLock};
 use tempfile::Builder;
-use songbird::events::{Event, EventContext, EventHandler, TrackEvent};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) static URL_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"https?://\S+").expect("failed to compile regex url"));
@@ -317,7 +317,7 @@ pub fn sanitize_text(text: &str) -> String {
 
 /// kanalizerを使用してテキスト中の英単語を一括でかなに変換する
 pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
-    let kanalizer_options= kanalizer::ConvertOptions {
+    let kanalizer_options = kanalizer::ConvertOptions {
         max_length: kanalizer::MaxLength::Auto,
         strategy: kanalizer::Strategy::Greedy,
         error_on_invalid_input: false,

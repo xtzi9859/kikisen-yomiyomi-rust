@@ -7,14 +7,14 @@ mod tts;
 mod types;
 
 use poise::serenity_prelude as serenity;
-use sea_orm::{ConnectionTrait, Database, DatabaseConnection,DbBackend, Schema};
-use std::{collections::HashMap, sync::Arc};
+use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbBackend, Schema};
 use songbird::SerenityInit;
-use tracing_appender::rolling;
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
-use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
+use tracing_appender::rolling;
+use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 use types::{Data, VoiceStyleInfo};
+use voicevox_core::nonblocking::{Onnxruntime, OpenJtalk, Synthesizer, VoiceModelFile};
 
 const OPEN_JTALK_DIR: &str = "./voicevox_core/dict/open_jtalk_dic_utf_8-1.11";
 const ONNXRUNTIME_FILENAME: &str =
@@ -109,10 +109,12 @@ async fn main() {
                     builder.build(&schema.create_table_from_entity(db::bot_whitelist::Entity));
                 let _ = db.execute(stmt_bot_whitelist).await;
 
-                let stmt_auto_connect = builder.build(&schema.create_table_from_entity(db::auto_connections::Entity));
+                let stmt_auto_connect =
+                    builder.build(&schema.create_table_from_entity(db::auto_connections::Entity));
                 let _ = db.execute(stmt_auto_connect).await;
 
-                let stmt_reading_targets = builder.build(&schema.create_table_from_entity(db::reading_targets::Entity));
+                let stmt_reading_targets =
+                    builder.build(&schema.create_table_from_entity(db::reading_targets::Entity));
                 let _ = db.execute(stmt_reading_targets).await;
 
                 let synthesizer = Synthesizer::builder(
@@ -158,7 +160,7 @@ async fn main() {
                     voice_styles,
                     voice_to_text_map: Arc::new(RwLock::new(HashMap::new())),
                     music_state: Arc::new(RwLock::new(HashMap::new())),
-                    guild_settings_cache: Arc::new(RwLock::new(HashMap::new()),),
+                    guild_settings_cache: Arc::new(RwLock::new(HashMap::new())),
                     kanalizer: kanalizer::Kanalizer::new(),
                 })
             })

@@ -1,7 +1,5 @@
 use crate::commands::voice_styles::autocomplete_voice_style;
-use crate::helpers::{
-    check_admin_permission, reply_no_permission, upsert_guild_setting,
-};
+use crate::helpers::{check_admin_permission, reply_no_permission, upsert_guild_setting};
 use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
@@ -93,8 +91,7 @@ async fn server_admin_permission(
 #[poise::command(slash_command, rename = "reply_type")]
 async fn server_reply_type(
     ctx: Context<'_>,
-    #[autocomplete = "autocomplete_reply_prefix"]
-    reply_type: i32,
+    #[autocomplete = "autocomplete_reply_prefix"] reply_type: i32,
 ) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
@@ -406,7 +403,10 @@ async fn autocomplete_permission<'a>(
     [
         ("メッセージの管理（manage_messages）", "manage_messages"),
         ("チャンネルの管理（manage_channels）", "manage_channels"),
-        ("メンバーのタイムアウト（moderate_members）", "moderate_members"),
+        (
+            "メンバーのタイムアウト（moderate_members）",
+            "moderate_members",
+        ),
         ("サーバーの管理（manage_guild）", "manage_guild"),
         ("管理者（administrator）", "administrator"),
     ]
@@ -432,6 +432,5 @@ async fn autocomplete_reply_prefix<'a>(
     REPLY_PREFIX_TYPES
         .iter()
         .filter(move |(_, label)| partial.is_empty() || label.contains(partial))
-        .map(|(key, label)|
-        serenity::builder::AutocompleteChoice::new(*label, *key))
+        .map(|(key, label)| serenity::builder::AutocompleteChoice::new(*label, *key))
 }

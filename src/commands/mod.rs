@@ -12,7 +12,7 @@ pub use auto_connect::auto_connect;
 pub use bot_whitelist::bot_whitelist;
 pub use misc::{age, restart};
 pub use music::{play, skip, volume};
-pub use server_setting::{server_setting, server_voice, server_settings};
+pub use server_setting::{server_setting, server_settings, server_voice};
 pub use tc::tc;
 pub use user_setting::user_setting;
 pub use vc::vc;

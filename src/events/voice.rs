@@ -1,6 +1,6 @@
 use crate::db;
 use crate::helpers::get_guild_settings;
-use crate::tts::{play_voicevox, apply_kanalizer};
+use crate::tts::{apply_kanalizer, play_voicevox};
 use crate::types::{Data, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -37,7 +37,6 @@ pub async fn on_voice_state_update(
                         .expect("failed to initialize songbird");
                     manager.remove(guild_id).await.ok();
                     data.voice_to_text_map.write().await.remove(&old_vc);
-                    
                 }
             }
         }
@@ -252,7 +251,14 @@ pub async fn on_voice_state_update(
     };
 
     if let Some(text) = text_to_read {
-        play_voicevox(ctx, guild_id, &apply_kanalizer(&text, &data.kanalizer), data, Some(new.user_id)).await?;
+        play_voicevox(
+            ctx,
+            guild_id,
+            &apply_kanalizer(&text, &data.kanalizer),
+            data,
+            Some(new.user_id),
+        )
+        .await?;
     }
 
     if !should_check_auto_disconnect {

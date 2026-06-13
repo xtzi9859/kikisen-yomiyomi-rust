@@ -1,7 +1,10 @@
 use crate::types::{Error, VoiceContextInfo};
 use poise::serenity_prelude as serenity;
 use songbird::events::{Event, EventContext, EventHandler, TrackEvent};
-use std::{collections::{HashMap, VecDeque}, sync::Arc};
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::Arc,
+};
 use tokio::sync::RwLock;
 
 #[derive(Clone)]

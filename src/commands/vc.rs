@@ -1,5 +1,5 @@
-use crate::types::{Error, Context, VoiceContextInfo, colors};
 use crate::tts::play_voicevox;
+use crate::types::{Context, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
 
 #[poise::command(slash_command, subcommands("connect"))]
@@ -22,7 +22,6 @@ pub async fn join_vc(
             let old_channel_id = serenity::ChannelId::new(old_channel.0.get());
             let mut map = ctx.data().voice_to_text_map.write().await;
             map.remove(&old_channel_id);
-            
         }
     }
 

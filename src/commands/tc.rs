@@ -22,13 +22,13 @@ pub async fn add(
 
     let Some(vc_channel_id) = bot_vc_channel_id else {
         ctx.send(
-            poise::CreateReply::default()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .description("botがVCに参加していません。")
-                        .color(colors::WARN),
-                ),
-        ).await?;
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botがVCに参加していません。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
         return Ok(());
     };
 
@@ -43,53 +43,51 @@ pub async fn add(
     let mut map = ctx.data().voice_to_text_map.write().await;
     let Some(info) = map.get_mut(&vc_channel_id) else {
         ctx.send(
-            poise::CreateReply::default()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .description("botの接続情報が見付かりませんでした。")
-                        .color(colors::ERROR),
-                ),
-        ).await?;
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botの接続情報が見付かりませんでした。")
+                    .color(colors::ERROR),
+            ),
+        )
+        .await?;
         return Ok(());
     };
 
     if info.text_channels.contains(&channel_id) {
         ctx.send(
-            poise::CreateReply::default()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .description(format!(
-                            "{}は既に読み上げ対象です。",
-                            channel_mention,
-                        ))
-                        .color(colors::WARN),
-                ),
-        ).await?;
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description(format!("{}は既に読み上げ対象です。", channel_mention,))
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
         return Ok(());
     }
 
     info.text_channels.insert(channel_id);
 
-    let reading_targets = info.text_channels
+    let reading_targets = info
+        .text_channels
         .iter()
         .map(|id| format!("<#{}>", id))
         .collect::<Vec<_>>()
         .join(" ");
 
     ctx.send(
-        poise::CreateReply::default()
-            .embed(
-                serenity::CreateEmbed::new()
-                    .title(format!(
-                        "{}を読み上げ対象に追加しました。",
-                        channel_mention,
-                    ))
-                    .field(
-                        "通知送信チャンネル", info.command_channel.mention().to_string(), false)
-                    .field("読み上げ対象", reading_targets, false)
-                    .color(colors::SUCCEED),
-            ),
-    ).await?;
+        poise::CreateReply::default().embed(
+            serenity::CreateEmbed::new()
+                .title(format!("{}を読み上げ対象に追加しました。", channel_mention,))
+                .field(
+                    "通知送信チャンネル",
+                    info.command_channel.mention().to_string(),
+                    false,
+                )
+                .field("読み上げ対象", reading_targets, false)
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
 
     Ok(())
 }
@@ -97,25 +95,25 @@ pub async fn add(
 #[poise::command(slash_command)]
 pub async fn remove(
     ctx: Context<'_>,
-    #[channel_types("Text")]
-    channel: Option<serenity::GuildChannel>,
+    #[channel_types("Text")] channel: Option<serenity::GuildChannel>,
 ) -> Result<(), Error> {
     let _ = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。");
 
     let bot_vc_channel_id = {
         let bot_id = ctx.cache().current_user().id;
-        ctx.guild().and_then(|g| g.voice_states.get(&bot_id).and_then(|vs| vs.channel_id))
+        ctx.guild()
+            .and_then(|g| g.voice_states.get(&bot_id).and_then(|vs| vs.channel_id))
     };
 
     let Some(vc_channel_id) = bot_vc_channel_id else {
         ctx.send(
-            poise::CreateReply::default()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .description("botがVCに参加していません。")
-                        .color(colors::WARN),
-                ),
-        ).await?;
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botがVCに参加していません。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
         return Ok(());
     };
 
@@ -130,53 +128,54 @@ pub async fn remove(
     let mut map = ctx.data().voice_to_text_map.write().await;
     let Some(info) = map.get_mut(&vc_channel_id) else {
         ctx.send(
-            poise::CreateReply::default()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .description("botの接続情報が見付かりませんでした。")
-                        .color(colors::WARN)
-                ),
-        ).await?;
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botの接続情報が見付かりませんでした。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
         return Ok(());
     };
 
     if !info.text_channels.contains(&channel_id) {
         ctx.send(
-            poise::CreateReply::default()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .description(format!(
-                            "{}は読み上げ対象ではありません。",
-                            channel_mention,
-                        ))
-                        .color(colors::WARN),
-                ),
-        ).await?;
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description(format!("{}は読み上げ対象ではありません。", channel_mention,))
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
         return Ok(());
     }
 
     info.text_channels.remove(&channel_id);
 
-    let reading_targets = info.text_channels
+    let reading_targets = info
+        .text_channels
         .iter()
         .map(|id| format!("<#{}>", id))
         .collect::<Vec<_>>()
         .join(" ");
 
     ctx.send(
-        poise::CreateReply::default()
-            .embed(
-                serenity::CreateEmbed::new()
-                    .title(format!(
-                        "{}を読み上げ対象から削除しました。",
-                        channel_mention,
-                    ))
-                    .field(
-                        "通知送信チャンネル", info.command_channel.mention().to_string(), false)
-                    .field("読み上げ対象", reading_targets, false)
-                    .color(colors::SUCCEED),
-            ),
-    ).await?;
+        poise::CreateReply::default().embed(
+            serenity::CreateEmbed::new()
+                .title(format!(
+                    "{}を読み上げ対象から削除しました。",
+                    channel_mention,
+                ))
+                .field(
+                    "通知送信チャンネル",
+                    info.command_channel.mention().to_string(),
+                    false,
+                )
+                .field("読み上げ対象", reading_targets, false)
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
 
     Ok(())
 }

@@ -1,8 +1,10 @@
-use crate::types::{Error, Context, colors};
 use crate::db;
 use crate::helpers::{check_admin_permission, reply_no_permission};
+use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, ModelTrait as _, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, ModelTrait as _, QueryFilter,
+};
 
 #[poise::command(slash_command, subcommands("bw_add", "bw_remove", "bw_list"))]
 pub async fn bot_whitelist(_: Context<'_>) -> Result<(), Error> {
@@ -77,7 +79,10 @@ async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
         return reply_no_permission(&ctx).await;
     }
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
     let bot_id = bot.id.get() as i64;
 
     let record = db::bot_whitelist::Entity::find()
@@ -89,13 +94,9 @@ async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
     match record {
         None => {
             ctx.send(
-                poise::CreateReply::default()
-                    .ephemeral(true)
-                    .embed(serenity::CreateEmbed::new()
-                        .description(format!(
-                            "`{}`は登録されていません。",
-                            bot.name,
-                        ))
+                poise::CreateReply::default().ephemeral(true).embed(
+                    serenity::CreateEmbed::new()
+                        .description(format!("`{}`は登録されていません。", bot.name,))
                         .color(colors::WARN),
                 ),
             )
@@ -104,13 +105,9 @@ async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
         Some(model) => {
             model.delete(&ctx.data().db).await?;
             ctx.send(
-                poise::CreateReply::default()
-                    .ephemeral(true)
-                    .embed(serenity::CreateEmbed::new()
-                        .description(format!(
-                            "`{}`をホワイトリストから削除しました。",
-                            bot.name
-                        ))
+                poise::CreateReply::default().ephemeral(true).embed(
+                    serenity::CreateEmbed::new()
+                        .description(format!("`{}`をホワイトリストから削除しました。", bot.name))
                         .color(colors::SUCCEED),
                 ),
             )
@@ -121,9 +118,12 @@ async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
     Ok(())
 }
 
-#[poise::command(slash_command, rename = "list",)]
+#[poise::command(slash_command, rename = "list")]
 async fn bw_list(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("サーバー内でのみ実行可能です。")?
+        .get() as i64;
     let entries = db::bot_whitelist::Entity::find()
         .filter(db::bot_whitelist::Column::GuildId.eq(guild_id))
         .all(&ctx.data().db)
@@ -140,9 +140,8 @@ async fn bw_list(ctx: Context<'_>) -> Result<(), Error> {
     };
 
     ctx.send(
-        poise::CreateReply::default()
-            .ephemeral(true)
-            .embed(serenity::CreateEmbed::new()
+        poise::CreateReply::default().ephemeral(true).embed(
+            serenity::CreateEmbed::new()
                 .title("botホワイトリスト")
                 .description(description)
                 .color(colors::INFO),

@@ -1,13 +1,16 @@
-use crate::types::{Error, Context, colors};
+use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
 
 #[poise::command(slash_command)]
 pub async fn restart(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.send(poise::CreateReply::default()
-            .embed(serenity::CreateEmbed::new()
+    ctx.send(
+        poise::CreateReply::default().embed(
+            serenity::CreateEmbed::new()
                 .color(colors::SUCCEED)
-                .description("再起動します…")
-    )).await?;
+                .description("再起動します…"),
+        ),
+    )
+    .await?;
 
     tracing::info!("restart command executed; restarting...");
 

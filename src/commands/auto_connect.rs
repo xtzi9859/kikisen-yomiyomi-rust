@@ -201,8 +201,7 @@ async fn config_ui_loop(
 #[poise::command(slash_command)]
 pub async fn auto_connect(
     ctx: Context<'_>,
-    #[channel_types("Voice", "Stage")]
-    channel: serenity::GuildChannel,
+    #[channel_types("Voice", "Stage")] channel: serenity::GuildChannel,
 ) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
@@ -279,44 +278,46 @@ pub async fn auto_connect(
                 .await
                 .ok();
 
-            press.create_response(
-                serenity_ctx,
-                serenity::CreateInteractionResponse::UpdateMessage(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .embed(
-                            serenity::CreateEmbed::new()
-                                .description(format!(
-                                    "{}を自動接続対象から削除しました。",
-                                    channel_mention
-                                ))
-                                .color(colors::SUCCEED),
-                        )
-                        .components(vec![]),
-                ),
-            )
-            .await?;
+            press
+                .create_response(
+                    serenity_ctx,
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        serenity::CreateInteractionResponseMessage::new()
+                            .embed(
+                                serenity::CreateEmbed::new()
+                                    .description(format!(
+                                        "{}を自動接続対象から削除しました。",
+                                        channel_mention
+                                    ))
+                                    .color(colors::SUCCEED),
+                            )
+                            .components(vec![]),
+                    ),
+                )
+                .await?;
         } else {
-            press.create_response(
-                serenity_ctx,
-                serenity::CreateInteractionResponse::UpdateMessage(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .embed(
-                            serenity::CreateEmbed::new()
-                                .description(format!(
-                                    "{}の設定を編集します。設定を入力してください。",
-                                    channel_mention,
-                                ))
-                                .color(colors::INFO),
-                        )
-                        .components(config_ui_components(
-                            &id("notify"),
-                            &id("reading"),
-                            &id("save"),
-                            &id("cancel"),
-                        )),
-                ),
-            )
-            .await?;
+            press
+                .create_response(
+                    serenity_ctx,
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        serenity::CreateInteractionResponseMessage::new()
+                            .embed(
+                                serenity::CreateEmbed::new()
+                                    .description(format!(
+                                        "{}の設定を編集します。設定を入力してください。",
+                                        channel_mention,
+                                    ))
+                                    .color(colors::INFO),
+                            )
+                            .components(config_ui_components(
+                                &id("notify"),
+                                &id("reading"),
+                                &id("save"),
+                                &id("cancel"),
+                            )),
+                    ),
+                )
+                .await?;
 
             config_ui_loop(
                 serenity_ctx,
@@ -365,10 +366,6 @@ pub async fn auto_connect(
         )
         .await?;
     }
-
-
-
-
 
     Ok(())
 }

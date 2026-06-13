@@ -1,6 +1,6 @@
+use crate::commands::voice_styles::autocomplete_voice_style;
 use crate::db;
 use crate::types::{Context, Error, colors};
-use crate::commands::voice_styles::autocomplete_voice_style;
 use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 

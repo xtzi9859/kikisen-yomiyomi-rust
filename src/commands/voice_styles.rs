@@ -1,4 +1,4 @@
-use crate::types::{Data, Error, Context, VoiceStyleInfo, colors};
+use crate::types::{Context, Data, Error, VoiceStyleInfo, colors};
 use poise::serenity_prelude as serenity;
 
 pub async fn autocomplete_voice_style<'a>(
