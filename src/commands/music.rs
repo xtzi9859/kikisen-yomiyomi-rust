@@ -16,6 +16,8 @@ pub(crate) struct YtdlOutput {
     duration: Option<f64>,
     #[serde(default)]
     thumbnail: Option<String>,
+    #[serde(default)]
+    upload_date: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
@@ -40,6 +42,8 @@ struct FfprobeTags {
     artist: Option<String>,
     #[serde(alias = "ALBUM", alias = "Album")]
     album: Option<String>,
+    #[serde(alias = "DATE", alias = "Date", alias = "YEAR", alias = "Year")]
+    date: Option<String>,
 }
 
 async fn get_guild_music_state(
@@ -74,13 +78,20 @@ fn build_queue_added_embed(item: &MusicItem) -> serenity::CreateEmbed {
         description.push_str(&format!(" ― {}", artist));
     }
     if let Some(album) = &item.album {
-        description.push_str(&format!("（{}）", album));
+        description.push_str(&format!(" / {}", album));
+    }
+    if let Some(year) = &item.release_year {
+        description.push_str(&format!(" ({})", year));
     }
 
     let mut embed = serenity::CreateEmbed::new()
         .title("キューに追加しました")
         .description(description)
         .color(colors::SUCCEED);
+
+    if item.is_ytdl {
+        embed = embed.url(item.url.clone());
+    }
 
     if let Some(thumb) = &item.thumbnail {
         embed = embed.thumbnail(thumb.clone());
@@ -97,20 +108,74 @@ fn build_queue_added_embed(item: &MusicItem) -> serenity::CreateEmbed {
 }
 
 fn music_item_from_ytdl(info: &YtdlOutput) -> MusicItem {
+    let release_year = info
+        .upload_date
+        .as_deref()
+        .and_then(|d| d.get(..4))
+        .and_then(|y| y.parse::<u32>().ok());
     MusicItem {
         url: info.webpage_url.clone(),
         title: info.title.clone(),
         artist: info.uploader.clone(),
         album: None,
+        release_year,
         duration: info.duration.map(|d| d as u64),
         thumbnail: info.thumbnail.clone(),
+        albumart: None,
         is_ytdl: true,
+    }
+}
+
+async fn get_localfile_metadata(
+    url: &str,
+) -> (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<u32>,
+    Option<u64>,
+    Option<Vec<u8>>,
+) {
+    let (title, artist, album, release_year, duration) =
+        get_ffprobe_metadata(url).await.unwrap_or((None, None, None, None, None));
+
+    let album_art = extract_album_art(url).await;
+
+    (title, artist, album, release_year, duration, album_art)
+}
+
+async fn extract_album_art(url: &str) -> Option<Vec<u8>> {
+    let tmp_path = format!("/tmp/kikisen_albumart_{}.jpg", std::process::id());
+
+    let status = tokio::process::Command::new("ffmpeg")
+        .args(&["-y", "-i", url, "-an", "-vcodec", "copy", &tmp_path])
+        .output()
+        .await
+        .ok()?;
+
+    if !status.status.success() {
+        return None;
+    }
+
+    let file_data = tokio::fs::read(&tmp_path).await.ok()?;
+    let _ = tokio::fs::remove_file(&tmp_path).await;
+
+    if file_data.is_empty() {
+        None
+    } else {
+        Some(file_data)
     }
 }
 
 async fn get_ffprobe_metadata(
     url: &str,
-) -> Option<(Option<String>, Option<String>, Option<String>, Option<u64>)> {
+) -> Option<(
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<u32>,
+    Option<u64>,
+)> {
     let output = tokio::process::Command::new("ffprobe")
         .args(&["-v", "quiet", "-print_format", "json", "-show_format", url])
         .output()
@@ -127,13 +192,18 @@ async fn get_ffprobe_metadata(
         .and_then(|d| d.parse::<f64>().ok())
         .map(|d| d as u64);
 
-    let (title, artist, album) = if let Some(tags) = probe.format.tags {
-        (tags.title, tags.artist, tags.album)
+    let (title, artist, album, release_year) = if let Some(tags) = probe.format.tags {
+        let year = tags
+            .date
+            .as_deref()
+            .and_then(|d| d.get(..4))
+            .and_then(|y| y.parse::<u32>().ok());
+        (tags.title, tags.artist, tags.album, year)
     } else {
-        (None, None, None)
+        (None, None, None, None)
     };
 
-    Some((title, artist, album, duration))
+    Some((title, artist, album, release_year, duration))
 }
 
 #[poise::command(prefix_command, aliases("p"))]
@@ -166,26 +236,17 @@ pub async fn play(
     let mut message_to_delete = None;
 
     if let Some(attachment) = file {
-        let metadata = get_ffprobe_metadata(&attachment.url).await;
-
-        let (title, artist, album, duration) =
-            if let Some((title, artist, album, duration)) = metadata {
-                (
-                    title.unwrap_or_else(|| attachment.filename.clone()),
-                    artist,
-                    album,
-                    duration,
-                )
-            } else {
-                (attachment.filename.clone(), None, None, None)
-            };
+        let (title, artist, album, release_year, duration, album_art) =
+            get_localfile_metadata(&attachment.url).await;
 
         item_to_add = Some(MusicItem {
             url: attachment.url.clone(),
-            title,
+            title: title.unwrap_or_else(|| attachment.filename.clone()),
             artist,
             album,
+            release_year,
             duration,
+            albumart: album_art,
             thumbnail: None,
             is_ytdl: false,
         });
@@ -198,6 +259,7 @@ pub async fn play(
                     title: "不明なタイトル".to_string(),
                     webpage_url: args.clone(),
                     uploader: None,
+                    upload_date: None,
                     duration: None,
                     thumbnail: None,
                 },
@@ -269,9 +331,11 @@ pub async fn play(
                         url: selected_url.clone(),
                         title: "Youtube Video".to_string(),
                         artist: None,
+                        release_year: None,
                         album: None,
                         duration: None,
                         thumbnail: None,
+                        albumart: None,
                         is_ytdl: true,
                     });
 
@@ -313,7 +377,19 @@ pub async fn play(
 
         if !should_play {
             let embed = build_queue_added_embed(&item);
-            ctx.send(poise::CreateReply::default().embed(embed)).await?;
+            if let Some(art) = &item.albumart {
+                let attachment = serenity::CreateAttachment::bytes(art.clone(), "albumart.jpg");
+                ctx.channel_id()
+                    .send_message(
+                        ctx.serenity_context(),
+                        serenity::CreateMessage::new()
+                            .embed(embed.thumbnail("attachment://albumart.jpg"))
+                            .add_file(attachment),
+                    )
+                    .await?;
+            } else {
+                ctx.send(poise::CreateReply::default().embed(embed)).await?;
+            }
         }
 
         if should_play {

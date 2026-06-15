@@ -15,6 +15,8 @@ pub struct MusicItem {
     pub album: Option<String>,
     pub duration: Option<u64>,
     pub thumbnail: Option<String>,
+    pub albumart: Option<Vec<u8>>,
+    pub release_year: Option<u32>,
     pub is_ytdl: bool,
 }
 
@@ -57,34 +59,6 @@ pub fn format_duration(sec: u64) -> String {
     } else {
         format!("{m}:{s:02}")
     }
-}
-
-pub fn build_now_playing_embed(item: &MusicItem) -> serenity::CreateEmbed {
-    let mut description = item.title.clone();
-    if let Some(artist) = &item.artist {
-        description.push_str(&format!(" ― {}", artist));
-    }
-    if let Some(album) = &item.album {
-        description.push_str(&format!("（{}）", album));
-    }
-
-    let mut embed = serenity::CreateEmbed::new()
-        .title("再生開始")
-        .description(description)
-        .color(colors::BOT);
-
-    if let Some(thumb) = &item.thumbnail {
-        embed = embed.thumbnail(thumb.clone());
-    }
-
-    if let Some(dur) = item.duration {
-        embed = embed.footer(serenity::CreateEmbedFooter::new(format!(
-            "{}",
-            format_duration(dur)
-        )));
-    }
-
-    embed
 }
 
 pub async fn play_next_music(
@@ -131,10 +105,7 @@ pub async fn play_next_music(
 
             state.current_track = Some(track_handler);
             if let Some(channel) = target_text_channel {
-                let embed = build_now_playing_embed(&next_item);
-                let _ = channel
-                    .send_message(&ctx.http, serenity::CreateMessage::new().embed(embed))
-                    .await;
+                send_now_playing(ctx, channel, &next_item).await;
             }
         } else {
             state.current_track = None;
@@ -144,4 +115,58 @@ pub async fn play_next_music(
         }
     }
     Ok(())
+}
+
+pub async fn send_now_playing(
+    ctx: &serenity::Context,
+    channel: serenity::ChannelId,
+    item: &MusicItem,
+) {
+    let mut description = item.title.clone();
+    if let Some(artist) = &item.artist {
+        description.push_str(&format!(" ― {}", artist));
+    }
+    if let Some(album) = &item.album {
+        description.push_str(&format!(" / {}", album));
+    }
+    if let Some(year) = &item.release_year {
+        description.push_str(&format!(" ({})", year));
+    }
+
+    let mut embed = serenity::CreateEmbed::new()
+        .title("▶ 再生開始")
+        .description(description)
+        .color(colors::BOT);
+
+    if item.is_ytdl {
+        embed = embed.url(item.url.clone());
+    }
+
+    if let Some(dur) = item.duration {
+        embed = embed.footer(serenity::CreateEmbedFooter::new(format!(
+            "⏱ {}",
+            format_duration(dur)
+        )));
+    }
+
+    if let Some(art) = &item.albumart {
+        // ローカルファイルのアルバムアート：添付ファイルとして同時送信
+        let attachment = serenity::CreateAttachment::bytes(art.clone(), "albumart.jpg");
+        let _ = channel
+            .send_message(
+                ctx,
+                serenity::CreateMessage::new()
+                    .embed(embed.thumbnail("attachment://albumart.jpg"))
+                    .add_file(attachment),
+            )
+            .await;
+    } else {
+        // YouTube等：URLサムネまたはサムネなし
+        if let Some(thumb) = &item.thumbnail {
+            embed = embed.thumbnail(thumb.clone());
+        }
+        let _ = channel
+            .send_message(ctx, serenity::CreateMessage::new().embed(embed))
+            .await;
+    }
 }
