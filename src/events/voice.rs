@@ -19,7 +19,22 @@ pub async fn on_ready(
     }
 
     tracing::info!("ready, logged in as {}", data_about_bot.user.name);
-    
+
+    if let Ok(channel_id_str) = std::env::var("NOTIFY_CHANNEL_ID") {
+        if let Ok(channel_id_u64) = channel_id_str.parse::<u64>() {
+            let channel_id = serenity::ChannelId::new(channel_id_u64);
+            let _ = channel_id
+                .send_message(
+                    &ctx.http,
+                    serenity::CreateMessage::new()
+                        .content(format!("起動完了: {}", &data_about_bot.user.name)),
+                )
+                .await;
+        } else {
+            tracing::error!("NOTIFY_CHANNEL_ID not a valid u64");
+        }
+    }
+
     Ok(())
 }
 
