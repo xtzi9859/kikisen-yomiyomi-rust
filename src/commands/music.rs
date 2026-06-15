@@ -291,15 +291,17 @@ pub async fn play(
     }
 
     if let Some(item) = item_to_add {
-        let embed = build_queue_added_embed(&item);
-        ctx.send(poise::CreateReply::default().embed(embed)).await?;
-
         let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
         let should_play = {
             let mut state = state_arc.write().await;
-            state.queue.push_back(item);
+            state.queue.push_back(item.clone());
             state.current_track.is_none()
         };
+
+        if !should_play {
+            let embed = build_queue_added_embed(&item);
+            ctx.send(poise::CreateReply::default().embed(embed)).await?;
+        }
 
         if should_play {
             play_next_music(
