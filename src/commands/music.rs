@@ -91,7 +91,6 @@ fn build_queue_added_embed(item: &MusicItem) -> serenity::CreateEmbed {
             "{}",
             format_duration(dur)
         )));
-        
     }
 
     embed
@@ -109,14 +108,11 @@ fn music_item_from_ytdl(info: &YtdlOutput) -> MusicItem {
     }
 }
 
-async fn get_ffprobe_metadata(url: &str) -> Option<(Option<String>, Option<String>, Option<String>, Option<u64>)> {
+async fn get_ffprobe_metadata(
+    url: &str,
+) -> Option<(Option<String>, Option<String>, Option<String>, Option<u64>)> {
     let output = tokio::process::Command::new("ffprobe")
-        .args(&[
-            "-v", "quiet",
-            "-print_format", "json",
-            "-show_format",
-            url,
-        ])
+        .args(&["-v", "quiet", "-print_format", "json", "-show_format", url])
         .output()
         .await
         .ok()?;
@@ -124,7 +120,9 @@ async fn get_ffprobe_metadata(url: &str) -> Option<(Option<String>, Option<Strin
     let stdout = String::from_utf8_lossy(&output.stdout);
     let probe: FfprobeOutput = serde_json::from_str(&stdout).ok()?;
 
-    let duration = probe.format.duration
+    let duration = probe
+        .format
+        .duration
         .as_deref()
         .and_then(|d| d.parse::<f64>().ok())
         .map(|d| d as u64);
@@ -148,22 +146,39 @@ pub async fn play(
         .guild_id()
         .ok_or("このコマンドはサーバー内でのみ実行できます")?;
 
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+    if manager.get(guild_id).is_none() {
+        ctx.send(
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botがVCに参加していません。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
     let mut item_to_add = None;
     let mut message_to_delete = None;
 
     if let Some(attachment) = file {
         let metadata = get_ffprobe_metadata(&attachment.url).await;
 
-        let (title, artist, album, duration) = if let Some((title, artist, album, duration)) = metadata {
-            (
-                title.unwrap_or_else(|| attachment.filename.clone()),
-                artist,
-                album,
-                duration,
-            )
-        } else {
-            (attachment.filename.clone(), None, None, None)
-        };
+        let (title, artist, album, duration) =
+            if let Some((title, artist, album, duration)) = metadata {
+                (
+                    title.unwrap_or_else(|| attachment.filename.clone()),
+                    artist,
+                    album,
+                    duration,
+                )
+            } else {
+                (attachment.filename.clone(), None, None, None)
+            };
 
         item_to_add = Some(MusicItem {
             url: attachment.url.clone(),
@@ -172,22 +187,20 @@ pub async fn play(
             album,
             duration,
             thumbnail: None,
-            is_ytdl: false
+            is_ytdl: false,
         });
     } else if let Some(args) = query {
         let processing_msg = ctx.say("処理中…").await?;
         if args.starts_with("http") {
             let info = match get_youtube_info(&args).await {
                 Ok(info) => info,
-                Err(_) => {
-                    YtdlOutput {
-                        title: "不明なタイトル".to_string(),
-                        webpage_url: args.clone(),
-                        uploader: None,
-                        duration: None,
-                        thumbnail: None,
-                    }
-                }
+                Err(_) => YtdlOutput {
+                    title: "不明なタイトル".to_string(),
+                    webpage_url: args.clone(),
+                    uploader: None,
+                    duration: None,
+                    thumbnail: None,
+                },
             };
 
             item_to_add = Some(music_item_from_ytdl(&info));
@@ -343,6 +356,22 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
         return Ok(());
     }
 
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+    if manager.get(guild_id).is_none() {
+        ctx.send(
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botがVCに参加していません。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
     let actual_vol = (vol_input / 100.0).clamp(0.0, 1.0);
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
     let mut state = state_arc.write().await;
@@ -361,7 +390,7 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
     }
 
     ctx.say(format!(
-        "音量を`{}`に設定しました。",
+        "音楽の音量を`{}`に設定しました。",
         vol_input.clamp(0.0, 100.0)
     ))
     .await?;
