@@ -1,6 +1,6 @@
 use crate::helpers::{get_guild_settings, upsert_guild_setting};
-use crate::music::{MusicItem, MusicState, play_next_music};
-use crate::types::{Context, Data, Error};
+use crate::music::{MusicItem, MusicState, format_duration, play_next_music};
+use crate::types::{Context, Data, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
 use std::{collections::VecDeque, sync::Arc};
@@ -10,6 +10,36 @@ use tokio::sync::RwLock;
 pub(crate) struct YtdlOutput {
     title: String,
     webpage_url: String,
+    #[serde(default)]
+    uploader: Option<String>,
+    #[serde(default)]
+    duration: Option<f64>,
+    #[serde(default)]
+    thumbnail: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+struct FfprobeOutput {
+    #[serde(default)]
+    format: FfprobeFormat,
+}
+
+#[derive(serde::Deserialize, Default)]
+struct FfprobeFormat {
+    #[serde(default)]
+    duration: Option<String>,
+    #[serde(default)]
+    tags: Option<FfprobeTags>,
+}
+
+#[derive(serde::Deserialize, Default)]
+struct FfprobeTags {
+    #[serde(alias = "TITLE", alias = "Title")]
+    title: Option<String>,
+    #[serde(alias = "ARTIST", alias = "Artist")]
+    artist: Option<String>,
+    #[serde(alias = "ALBUM", alias = "Album")]
+    album: Option<String>,
 }
 
 async fn get_guild_music_state(
@@ -38,6 +68,76 @@ async fn get_guild_music_state(
         .clone()
 }
 
+fn build_queue_added_embed(item: &MusicItem) -> serenity::CreateEmbed {
+    let mut description = item.title.clone();
+    if let Some(artist) = &item.artist {
+        description.push_str(&format!(" ― {}", artist));
+    }
+    if let Some(album) = &item.album {
+        description.push_str(&format!("（{}）", album));
+    }
+
+    let mut embed = serenity::CreateEmbed::new()
+        .title("キューに追加しました")
+        .description(description)
+        .color(colors::SUCCEED);
+
+    if let Some(thumb) = &item.thumbnail {
+        embed = embed.thumbnail(thumb.clone());
+    }
+
+    if let Some(dur) = item.duration {
+        embed = embed.footer(serenity::CreateEmbedFooter::new(format!(
+            "{}",
+            format_duration(dur)
+        )));
+        
+    }
+
+    embed
+}
+
+fn music_item_from_ytdl(info: &YtdlOutput) -> MusicItem {
+    MusicItem {
+        url: info.webpage_url.clone(),
+        title: info.title.clone(),
+        artist: info.uploader.clone(),
+        album: None,
+        duration: info.duration.map(|d| d as u64),
+        thumbnail: info.thumbnail.clone(),
+        is_ytdl: true,
+    }
+}
+
+async fn get_ffprobe_metadata(url: &str) -> Option<(Option<String>, Option<String>, Option<String>, Option<u64>)> {
+    let output = tokio::process::Command::new("ffprobe")
+        .args(&[
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_format",
+            url,
+        ])
+        .output()
+        .await
+        .ok()?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let probe: FfprobeOutput = serde_json::from_str(&stdout).ok()?;
+
+    let duration = probe.format.duration
+        .as_deref()
+        .and_then(|d| d.parse::<f64>().ok())
+        .map(|d| d as u64);
+
+    let (title, artist, album) = if let Some(tags) = probe.format.tags {
+        (tags.title, tags.artist, tags.album)
+    } else {
+        (None, None, None)
+    };
+
+    Some((title, artist, album, duration))
+}
+
 #[poise::command(prefix_command, aliases("p"))]
 pub async fn play(
     ctx: Context<'_>,
@@ -52,28 +152,45 @@ pub async fn play(
     let mut message_to_delete = None;
 
     if let Some(attachment) = file {
+        let metadata = get_ffprobe_metadata(&attachment.url).await;
+
+        let (title, artist, album, duration) = if let Some((title, artist, album, duration)) = metadata {
+            (
+                title.unwrap_or_else(|| attachment.filename.clone()),
+                artist,
+                album,
+                duration,
+            )
+        } else {
+            (attachment.filename.clone(), None, None, None)
+        };
+
         item_to_add = Some(MusicItem {
             url: attachment.url.clone(),
-            title: attachment.filename.clone(),
-            is_ytdl: false,
+            title,
+            artist,
+            album,
+            duration,
+            thumbnail: None,
+            is_ytdl: false
         });
     } else if let Some(args) = query {
         let processing_msg = ctx.say("処理中…").await?;
         if args.starts_with("http") {
-            let title = match get_youtube_info(&args).await {
-                Ok(info) => info.title,
-                Err(why) => {
-                    tracing::warn!("failed to retrieve video info from URL: {:?}", why);
-                    "不明なタイトル".to_string()
+            let info = match get_youtube_info(&args).await {
+                Ok(info) => info,
+                Err(_) => {
+                    YtdlOutput {
+                        title: "不明なタイトル".to_string(),
+                        webpage_url: args.clone(),
+                        uploader: None,
+                        duration: None,
+                        thumbnail: None,
+                    }
                 }
             };
 
-            item_to_add = Some(MusicItem {
-                url: args.clone(),
-                title: title,
-                is_ytdl: true,
-            });
-
+            item_to_add = Some(music_item_from_ytdl(&info));
             message_to_delete = Some(processing_msg);
         } else {
             let search_results = search_youtube(&args).await?;
@@ -131,11 +248,19 @@ pub async fn play(
                     _ => return Ok(()),
                 };
 
-                let selected_title = search_results
+                let selected_item = search_results
                     .into_iter()
                     .find(|v| v.webpage_url == selected_url)
-                    .map(|v| v.title)
-                    .unwrap_or_else(|| "Youtube Video".to_string());
+                    .map(|info| music_item_from_ytdl(&info))
+                    .unwrap_or_else(|| MusicItem {
+                        url: selected_url.clone(),
+                        title: "Youtube Video".to_string(),
+                        artist: None,
+                        album: None,
+                        duration: None,
+                        thumbnail: None,
+                        is_ytdl: true,
+                    });
 
                 mci.create_response(
                     ctx.serenity_context(),
@@ -147,12 +272,7 @@ pub async fn play(
                 )
                 .await?;
 
-                item_to_add = Some(MusicItem {
-                    url: selected_url,
-                    title: selected_title,
-                    is_ytdl: true,
-                });
-
+                item_to_add = Some(selected_item);
                 message_to_delete = Some(processing_msg);
             } else {
                 let _ = processing_msg
@@ -171,8 +291,8 @@ pub async fn play(
     }
 
     if let Some(item) = item_to_add {
-        ctx.say(format!("キューに追加しました: {}", item.title))
-            .await?;
+        let embed = build_queue_added_embed(&item);
+        ctx.send(poise::CreateReply::default().embed(embed)).await?;
 
         let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
         let should_play = {

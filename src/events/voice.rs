@@ -7,7 +7,7 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use std::collections::HashSet;
 
 pub async fn on_ready(
-    _ctx: &serenity::Context,
+    ctx: &serenity::Context,
     data_about_bot: &serenity::Ready,
     data: &Data,
 ) -> Result<(), Error> {
@@ -19,6 +19,7 @@ pub async fn on_ready(
     }
 
     tracing::info!("ready, logged in as {}", data_about_bot.user.name);
+    
     Ok(())
 }
 

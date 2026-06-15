@@ -1,4 +1,4 @@
-use crate::types::{Error, VoiceContextInfo};
+use crate::types::{Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
 use songbird::events::{Event, EventContext, EventHandler, TrackEvent};
 use std::{
@@ -11,6 +11,10 @@ use tokio::sync::RwLock;
 pub struct MusicItem {
     pub url: String,
     pub title: String,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+    pub duration: Option<u64>,
+    pub thumbnail: Option<String>,
     pub is_ytdl: bool,
 }
 
@@ -40,6 +44,47 @@ impl EventHandler for MusicEndHandler {
         });
         None
     }
+}
+
+/// 秒数をm:ss形式の文字列に変換する
+pub fn format_duration(sec: u64) -> String {
+    let h = sec / 3600;
+    let m = (sec % 3600) / 60;
+    let s = sec % 60;
+
+    if h > 0 {
+        format!("{h}:{m:02}:{s:02}")
+    } else {
+        format!("{m}:{s:02}")
+    }
+}
+
+pub fn build_now_playing_embed(item: &MusicItem) -> serenity::CreateEmbed {
+    let mut description = item.title.clone();
+    if let Some(artist) = &item.artist {
+        description.push_str(&format!(" ― {}", artist));
+    }
+    if let Some(album) = &item.album {
+        description.push_str(&format!("（{}）", album));
+    }
+
+    let mut embed = serenity::CreateEmbed::new()
+        .title("再生開始")
+        .description(description)
+        .color(colors::BOT);
+
+    if let Some(thumb) = &item.thumbnail {
+        embed = embed.thumbnail(thumb.clone());
+    }
+
+    if let Some(dur) = item.duration {
+        embed = embed.footer(serenity::CreateEmbedFooter::new(format!(
+            "{}",
+            format_duration(dur)
+        )));
+    }
+
+    embed
 }
 
 pub async fn play_next_music(
@@ -86,8 +131,9 @@ pub async fn play_next_music(
 
             state.current_track = Some(track_handler);
             if let Some(channel) = target_text_channel {
+                let embed = build_now_playing_embed(&next_item);
                 let _ = channel
-                    .say(&ctx.http, format!("再生中: {}", next_item.title))
+                    .send_message(&ctx.http, serenity::CreateMessage::new().embed(embed))
                     .await;
             }
         } else {

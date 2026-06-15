@@ -8,6 +8,8 @@ use std::sync::{Arc, LazyLock};
 use tempfile::Builder;
 use unicode_segmentation::UnicodeSegmentation;
 
+const MAX_SYNTHESIS_LENGTH: usize = 200;
+
 pub(crate) static URL_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"https?://\S+").expect("failed to compile regex url"));
 pub(crate) static CODEBLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -148,6 +150,7 @@ pub fn format_message(
     let mut prefix = String::new();
 
     if let Some(ref referenced) = message.referenced_message {
+        // TODO: reply_prefix_typeが0, 1のときもauthor_nameを取得するのは無駄なので3, 4のときだけ取得するように改良する
         let mut author_name = referenced.author.name.clone();
         if let Some(guild_id) = message.guild_id {
             if let Some(guild) = ctx.cache.guild(guild_id) {
@@ -338,3 +341,6 @@ pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
         })
         .into_owned()
 }
+
+//pub fn split_text_for_synthesis(text: &str, max_length: usize) -> Vec<String> {
+//}
