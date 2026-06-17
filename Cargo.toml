@@ -19,6 +19,7 @@ serenity = "0.12.5"
 songbird = { version = "0.6.0", features = ["driver", "builtin-queue"] }
 symphonia = { version = "0.5.5", features = ["wav"] }
 tempfile = "3.27.0"
+tikv-jemallocator = "0.7.0"
 tokio = { version = "1.52.3", features = ["full"] }
 tracing = "0.1.44"
 tracing-appender = "0.2.5"

@@ -169,6 +169,13 @@ fn embed_to_text(embed: &serenity::Embed) -> String {
         }
     }
 
+    if let Some(desc) = &embed.description {
+        let text = sanitize_text(desc);
+        if !text.is_empty() {
+            parts.push(text);
+        }
+    }
+
     for field in &embed.fields {
         let name = sanitize_text(&field.name);
         let value = sanitize_text(&field.value);
@@ -185,10 +192,6 @@ fn embed_to_text(embed: &serenity::Embed) -> String {
         if !text.is_empty() {
             parts.push(text);
         }
-    }
-
-    if let Some(ts) = &embed.timestamp {
-        parts.push(format!("{}", ts.timestamp()))
     }
 
     parts.join(" ")
