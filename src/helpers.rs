@@ -1,7 +1,31 @@
 use crate::db;
-use crate::types::{Context, DEFAULT_PREFIX, Data, Error, colors};
+use crate::types::{Context, DEFAULT_PREFIX, Data, Error, colors, PersistedVoiceEntry};
+use std::path::Path;
 use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
+
+const RESTART_STATE_PATH: &str = "./voice_state.json";
+
+pub fn save_voice_state(entries: &[PersistedVoiceEntry]) -> Result<(), Error> {
+    let json = serde_json::to_string_pretty(entries)?;
+    std::fs::write(RESTART_STATE_PATH, json)?;
+    tracing::info!("save voice states for restart");
+    Ok(())
+}
+
+pub fn load_and_clear_restart_state() -> Option<Vec<PersistedVoiceEntry>> {
+    if !Path::new(RESTART_STATE_PATH).exists() {
+        return None;
+    }
+
+    let result = std::fs::read_to_string(RESTART_STATE_PATH)
+        .ok()
+        .and_then(|s| serde_json::from_str::<Vec<PersistedVoiceEntry>>(&s).ok());
+
+    let _ = std::fs::remove_file(RESTART_STATE_PATH);
+
+    result
+}
 
 pub async fn get_guild_settings(
     data: &Data,

@@ -1,4 +1,4 @@
-use crate::types::{Context, Error, colors};
+use crate::types::{Context, Error, PersistedVoiceEntry, colors};
 use poise::serenity_prelude as serenity;
 
 /// botを再起動する
@@ -12,6 +12,54 @@ pub async fn restart(ctx: Context<'_>) -> Result<(), Error> {
         ),
     )
     .await?;
+
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+
+    let map = ctx.data().voice_to_text_map.read().await;
+    let mut entries = Vec::new();
+
+    for (guild_id, call_lock) in manager.iter() {
+        let call = call_lock.lock().await;
+        if let Some(current_channel) = call.current_channel() {
+            let channel_id = serenity::ChannelId::new(current_channel.0.get());
+            if let Some(context) = map.get(&channel_id) {
+                entries.push(PersistedVoiceEntry {
+                    guild_id: serenity::GuildId::new(guild_id.0.get()),
+                    voice_channel_id: channel_id,
+                    context: crate::types::VoiceContextInfo {
+                        command_channel: context.command_channel,
+                        text_channels: context.text_channels.clone(),
+                    },
+                });
+            }
+        }
+    }
+
+    let mut notify_channel = std::collections::HashSet::new();
+    for entry in &entries {
+        if notify_channel.insert(entry.context.command_channel) {
+            let _ = entry
+                .context
+                .command_channel
+                .send_message(
+                    &ctx.serenity_context().http,
+                    serenity::CreateMessage::new().embed(
+                        serenity::CreateEmbed::new()
+                            .color(colors::SUCCEED)
+                            .description("restartコマンドが実行されたのでbotを再起動します。\n再起動後に自動でボイスチャンネルに再接続します。"),
+                    ),
+                )
+                .await;
+        }
+    }
+
+    drop(map);
+
+    if let Err(e) = crate::helpers::save_voice_state(&entries) {
+        tracing::error!(?e, "failed to save restart state");
+    }
 
     tracing::info!("restart command executed; restarting...");
 

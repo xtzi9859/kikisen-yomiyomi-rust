@@ -1,4 +1,5 @@
 use poise::serenity_prelude as serenity;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -18,6 +19,14 @@ pub mod colors {
     pub const ERROR: u32 = 0xed4245;
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct PersistedVoiceEntry {
+    pub guild_id: serenity::GuildId,
+    pub voice_channel_id: serenity::ChannelId,
+    pub context: VoiceContextInfo,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct VoiceContextInfo {
     pub command_channel: serenity::ChannelId,
     pub text_channels: HashSet<serenity::ChannelId>,

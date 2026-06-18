@@ -17,8 +17,102 @@ pub async fn on_ready(
         let guild_id = serenity::GuildId::new(settings.guild_id as u64);
         cache.insert(guild_id, settings);
     }
+    drop(cache);
 
     tracing::info!("ready, logged in as {}", data_about_bot.user.name);
+
+    if let Some(entries) = crate::helpers::load_and_clear_restart_state() {
+        let manager = songbird::get(ctx)
+            .await
+            .expect("failed to initialize songbird");
+
+        for entry in entries {
+            let member_count = ctx
+                .cache
+                .guild(entry.guild_id)
+                .map(|g| {
+                    g.voice_states
+                        .values()
+                        .filter(|vs| vs.channel_id == Some(entry.voice_channel_id))
+                        .filter(|vs| {
+                            !g.members
+                                .get(&vs.user_id)
+                                .map(|m| m.user.bot)
+                                .unwrap_or(false)
+                        })
+                        .count()
+                })
+                .unwrap_or(0);
+
+            if member_count == 0 {
+                continue;
+            }
+
+            match manager.join(entry.guild_id, entry.voice_channel_id).await {
+                Ok(_) => {
+                    let notify_channel_id = entry.context.command_channel;
+                    let reading_list = entry
+                        .context
+                        .text_channels
+                        .iter()
+                        .map(|id| format!("<#{}>", id))
+                        .collect::<Vec<_>>()
+                        .join(" ");
+
+                    let _ = notify_channel_id
+                        .send_message(
+                            &ctx.http,
+                            serenity::CreateMessage::new().embed(
+                                serenity::CreateEmbed::new()
+                                    .title("自動接続")
+                                    .description(format!(
+                                        "<#{}>に再接続しました。",
+                                        entry.voice_channel_id
+                                    ))
+                                    .field(
+                                        "通知送信チャンネル",
+                                        format!("<#{}>", notify_channel_id),
+                                        false,
+                                    )
+                                    .field("読み上げ対象", reading_list, false)
+                                    .color(colors::SUCCEED),
+                            ),
+                        )
+                        .await;
+
+                    data.voice_to_text_map
+                        .write()
+                        .await
+                        .insert(entry.voice_channel_id, entry.context);
+
+                    let mut bot_name = ctx.cache.current_user().name.clone();
+                    let current_user_id = ctx.cache.current_user().id;
+                    if let Ok(member) = entry.guild_id.member(&ctx.http, current_user_id).await {
+                        if let Some(nick) = member.nick {
+                            bot_name = nick;
+                        }
+                    }
+
+                    let _ = play_voicevox(
+                        ctx,
+                        entry.guild_id,
+                        &format!("{}が接続しました", bot_name),
+                        data,
+                        Some(current_user_id),
+                    )
+                    .await;
+                }
+                Err(e) => {
+                    tracing::error!(
+                        error = ?e,
+                        guild_id = %entry.guild_id,
+                        channel_id = %entry.voice_channel_id,
+                        "failed to reconnect"
+                    )
+                }
+            }
+        }
+    }
 
     if let Ok(channel_id_str) = std::env::var("NOTIFY_CHANNEL_ID") {
         if let Ok(channel_id_u64) = channel_id_str.parse::<u64>() {
