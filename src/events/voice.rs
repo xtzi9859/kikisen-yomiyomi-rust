@@ -144,7 +144,18 @@ pub async fn on_voice_state_update(
                         )
                         .await;
 
-                    let bot_name = ctx.cache.current_user().name.clone();
+                    let mut bot_name = ctx.cache.current_user().name.clone();
+
+                    if let Some(guild_id) = new.guild_id {
+                        let current_user_id = ctx.cache.current_user().id;
+
+                        if let Ok(member) = guild_id.member(&ctx.http, current_user_id).await {
+                            if let Some(nick) = member.nick {
+                                bot_name = nick;
+                            }
+                        }
+                    }
+
                     let _ = play_voicevox(
                         ctx,
                         guild_id,
