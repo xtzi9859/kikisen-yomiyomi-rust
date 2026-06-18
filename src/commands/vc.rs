@@ -43,6 +43,7 @@ pub async fn join_vc(
     Ok(())
 }
 
+/// botをVCに参加させ、コマンドが実行されたチャンネルを通知送信先と読み上げ対象に設定する
 #[poise::command(slash_command)]
 pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
     let guild_id = ctx

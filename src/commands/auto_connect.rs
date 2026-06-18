@@ -201,7 +201,9 @@ async fn config_ui_loop(
 #[poise::command(slash_command)]
 pub async fn auto_connect(
     ctx: Context<'_>,
-    #[channel_types("Voice", "Stage")] channel: serenity::GuildChannel,
+    #[channel_types("Voice", "Stage")]
+    #[description = "自動接続対象になるボイスチャンネル"]
+    channel: serenity::GuildChannel,
 ) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;

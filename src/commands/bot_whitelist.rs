@@ -11,8 +11,13 @@ pub async fn bot_whitelist(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// botを読み上げ対象のホワイトリストに加える
 #[poise::command(slash_command, rename = "add")]
-async fn bw_add(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
+async fn bw_add(
+    ctx: Context<'_>,
+    #[description = "ホワイトリストに追加するbot"]
+    bot: serenity::User
+) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
@@ -73,8 +78,13 @@ async fn bw_add(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
     Ok(())
 }
 
+/// botを読み上げ対象のホワイトリストから削除する
 #[poise::command(slash_command, rename = "remove")]
-async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
+async fn bw_remove(
+    ctx: Context<'_>, 
+    #[description = "ホワイトリストから削除するbot"]
+    bot: serenity::User
+) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
@@ -118,6 +128,7 @@ async fn bw_remove(ctx: Context<'_>, bot: serenity::User) -> Result<(), Error> {
     Ok(())
 }
 
+/// 読み上げ対象になっているbotの一覧を表示する
 #[poise::command(slash_command, rename = "list")]
 async fn bw_list(ctx: Context<'_>) -> Result<(), Error> {
     let guild_id = ctx

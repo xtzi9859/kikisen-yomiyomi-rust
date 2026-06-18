@@ -88,10 +88,12 @@ async fn server_admin_permission(
     Ok(())
 }
 
+/// 読み上げるメッセージが返信だった場合に先頭につく接頭辞の形式を設定する
 #[poise::command(slash_command, rename = "reply_type")]
 async fn server_reply_type(
     ctx: Context<'_>,
-    #[autocomplete = "autocomplete_reply_prefix"] reply_type: i32,
+    #[autocomplete = "autocomplete_reply_prefix"]
+    reply_type: i32,
 ) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
@@ -121,6 +123,7 @@ async fn server_reply_type(
     Ok(())
 }
 
+/// テキストコマンドのプレフィックスを変更する（デフォルトは「!」）
 #[poise::command(slash_command, rename = "command_prefix")]
 async fn server_command_prefix(ctx: Context<'_>, prefix: String) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
@@ -159,6 +162,7 @@ pub async fn server_voice(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// サーバーのデフォルトの話者を設定する
 #[poise::command(slash_command, rename = "default_speaker_id")]
 async fn server_speaker_id(
     ctx: Context<'_>,
@@ -214,6 +218,7 @@ async fn server_speaker_id(
     Ok(())
 }
 
+/// サーバーのデフォルトの話速を設定する
 #[poise::command(slash_command, rename = "default_speed")]
 async fn server_voice_speed(
     ctx: Context<'_>,
@@ -245,6 +250,7 @@ async fn server_voice_speed(
     Ok(())
 }
 
+/// サーバーのデフォルトの音高を設定する
 #[poise::command(slash_command, rename = "default_pitch")]
 async fn server_voice_pitch(
     ctx: Context<'_>,
@@ -275,6 +281,7 @@ async fn server_voice_pitch(
     Ok(())
 }
 
+/// サーバーのデフォルトの抑揚を設定する
 #[poise::command(slash_command, rename = "default_intonation")]
 async fn server_voice_intonation(
     ctx: Context<'_>,
@@ -305,6 +312,7 @@ async fn server_voice_intonation(
     Ok(())
 }
 
+/// サーバーのデフォルトのボイス設定をリセットする
 #[poise::command(slash_command, rename = "reset")]
 async fn server_voice_reset(ctx: Context<'_>) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
@@ -330,6 +338,7 @@ async fn server_voice_reset(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// サーバー設定のON/OFFを行う
 #[poise::command(slash_command)]
 pub async fn server_settings(
     ctx: Context<'_>,

@@ -7,6 +7,7 @@ pub async fn tc(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// テキストチャンネルを読み上げ対象に一時的に加える
 #[poise::command(slash_command)]
 pub async fn add(
     ctx: Context<'_>,
@@ -92,6 +93,7 @@ pub async fn add(
     Ok(())
 }
 
+/// テキストチャンネルを読み上げ対象から一時的に除く
 #[poise::command(slash_command)]
 pub async fn remove(
     ctx: Context<'_>,

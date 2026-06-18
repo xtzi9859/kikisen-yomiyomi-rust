@@ -44,6 +44,7 @@ pub async fn user_setting(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// 読み上げの話者を設定する
 #[poise::command(slash_command, rename = "speaker")]
 async fn us_speaker(
     ctx: Context<'_>,
@@ -100,6 +101,7 @@ async fn us_speaker(
     Ok(())
 }
 
+/// 読み上げの速度を設定する
 #[poise::command(slash_command, guild_only, rename = "speed")]
 async fn us_speed(
     ctx: Context<'_>,
@@ -132,6 +134,7 @@ async fn us_speed(
     Ok(())
 }
 
+/// 読み上げの音高を設定する
 #[poise::command(slash_command, rename = "pitch")]
 async fn us_pitch(
     ctx: Context<'_>,
@@ -164,6 +167,7 @@ async fn us_pitch(
     Ok(())
 }
 
+/// 読み上げの抑揚を設定する
 #[poise::command(slash_command, guild_only, rename = "intonation")]
 async fn us_intonation(
     ctx: Context<'_>,
@@ -196,6 +200,7 @@ async fn us_intonation(
     Ok(())
 }
 
+/// 読み上げの設定をリセットする
 #[poise::command(slash_command, guild_only, rename = "reset")]
 async fn us_reset(ctx: Context<'_>) -> Result<(), Error> {
     use sea_orm::ActiveValue::Set;
