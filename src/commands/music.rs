@@ -3,7 +3,7 @@ use crate::music::{MusicItem, MusicState, format_duration, play_next_music};
 use crate::types::{Context, Data, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
-use std::{collections::VecDeque, sync::Arc};
+use std::{collections::VecDeque, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 
 #[derive(serde::Deserialize)]
@@ -136,8 +136,9 @@ async fn get_localfile_metadata(
     Option<u64>,
     Option<Vec<u8>>,
 ) {
-    let (title, artist, album, release_year, duration) =
-        get_ffprobe_metadata(url).await.unwrap_or((None, None, None, None, None));
+    let (title, artist, album, release_year, duration) = get_ffprobe_metadata(url)
+        .await
+        .unwrap_or((None, None, None, None, None));
 
     let album_art = extract_album_art(url).await;
 
@@ -204,6 +205,44 @@ async fn get_ffprobe_metadata(
     };
 
     Some((title, artist, album, release_year, duration))
+}
+
+async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&[
+            "--dump-json",
+            "--default-search",
+            "ytsearch",
+            &format!("ytsearch10:{}", query),
+        ])
+        .output()
+        .await?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut results = Vec::new();
+
+    for line in stdout.lines() {
+        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
+            results.push(video);
+        }
+    }
+
+    Ok(results)
+}
+
+async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&["--dump-json", "--no-playlist", url])
+        .output()
+        .await?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    if let Some(first_line) = stdout.lines().next() {
+        let video = serde_json::from_str::<YtdlOutput>(first_line)?;
+        Ok(video)
+    } else {
+        Err("動画情報の取得に失敗しました".into())
+    }
 }
 
 #[poise::command(prefix_command, aliases("p"))]
@@ -473,40 +512,158 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
     Ok(())
 }
 
-async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
-    let output = tokio::process::Command::new("yt-dlp")
-        .args(&[
-            "--dump-json",
-            "--default-search",
-            "ytsearch",
-            &format!("ytsearch10:{}", query),
-        ])
-        .output()
+#[poise::command(prefix_command, aliases("ps", "resume", "unpause", "toggle", "tg"))]
+pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+    if manager.get(guild_id).is_none() {
+        ctx.send(
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botがVCに参加していません。")
+                    .color(colors::WARN),
+            ),
+        )
         .await?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut results = Vec::new();
+        return Ok(());
+    }
 
-    for line in stdout.lines() {
-        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
-            results.push(video);
+    let mut current_play_mode = None;
+    let mut track_handle = None;
+
+    {
+        let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+        let state = state_arc.read().await;
+        if let Some(handle) = &state.current_track {
+            track_handle = Some(handle.clone());
         }
     }
 
-    Ok(results)
+    if let Some(handle) = &track_handle {
+        if let Ok(info) = handle.get_info().await {
+            current_play_mode = Some(info.playing);
+        }
+    }
+
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    let mut _state = state_arc.write().await;
+
+    match current_play_mode {
+        Some(songbird::tracks::PlayMode::Play) => {
+            if let Some(handle) = &track_handle {
+                let _ = handle.pause();
+                ctx.say("音楽を一時停止しました。").await?;
+            }
+        }
+
+        Some(songbird::tracks::PlayMode::Pause) => {
+            if let Some(handle) = &track_handle {
+                let _ = handle.play();
+                ctx.say("音楽を再開しました。").await?;
+            }
+        }
+
+        _ => {
+            ctx.say("音楽を再生していません。").await?;
+        }
+    }
+
+    Ok(())
 }
 
-async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
-    let output = tokio::process::Command::new("yt-dlp")
-        .args(&["--dump-json", "--no-playlist", url])
-        .output()
-        .await?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
+#[poise::command(prefix_command)]
+pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
 
-    if let Some(first_line) = stdout.lines().next() {
-        let video = serde_json::from_str::<YtdlOutput>(first_line)?;
-        Ok(video)
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+    if manager.get(guild_id).is_none() {
+        ctx.send(
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("botがVCに参加していません。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    let state = state_arc.read().await;
+
+    let handle = match &state.current_track {
+        Some(h) => h,
+        None => {
+            ctx.say("音楽を再生していません。").await?;
+            return Ok(());
+        }
+    };
+
+    let is_relative = input.starts_with("+") || input.starts_with("-");
+    let is_negative = input.starts_with("-");
+
+    let time_str = if is_relative { &input[1..] } else { &input };
+
+    let target_seconds = match parse_time_to_secs(time_str) {
+        Some(secs) => secs,
+        None => {
+            ctx.say("時間の形式が不正です。秒数または「h:m:s」などの形式で入力してください。").await?;
+            return Ok(());
+        }
+    };
+
+    let final_duration = if is_relative {
+        let info = handle.get_info().await?;
+        let current_position = info.position;
+
+        if is_negative {
+            current_position.checked_sub(Duration::from_secs(target_seconds))
+                .unwrap_or(Duration::from_secs(0))
+        } else {
+            current_position + Duration::from_secs(target_seconds)
+        }
     } else {
-        Err("動画情報の取得に失敗しました".into())
+        Duration::from_secs(target_seconds)
+    };
+
+    match handle.seek_async(final_duration).await {
+        Ok(actual_time) => {
+            let secs = actual_time.as_secs();
+            ctx.say(format!("再生位置を `{}:{:02}` に変更しました", secs / 60, secs % 60)).await?;
+        }
+        Err(e) => {
+            ctx.say(format!("シークに失敗しました。: {:?}", e)).await?;
+        }
+    }
+
+    Ok(())
+}
+
+fn parse_time_to_secs(s: &str) -> Option<u64> {
+    let parts: Vec<&str> = s.split(":").collect();
+    match parts.as_slice() {
+        [s] => s.parse::<u64>().ok(),
+
+        [m, s] => {
+            let minutes = m.parse::<u64>().ok()?;
+            let seconds = s.parse::<u64>().ok()?;
+            Some(minutes * 60 + seconds)
+        }
+
+        [h, m, s] => {
+            let hours = h.parse::<u64>().ok()?;
+            let minutes = m.parse::<u64>().ok()?;
+            let seconds = s.parse::<u64>().ok()?;
+            Some(hours * 3600 + minutes * 60 + seconds)
+        }
+
+        _ => None,
     }
 }
