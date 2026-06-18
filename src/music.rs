@@ -24,6 +24,7 @@ pub struct MusicState {
     pub queue: VecDeque<MusicItem>,
     pub current_track: Option<songbird::tracks::TrackHandle>,
     pub volume: f32,
+    pub notify_channel: Option<serenity::ChannelId>,
 }
 
 pub struct MusicEndHandler {
@@ -71,17 +72,9 @@ pub async fn play_next_music(
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut call = handler_lock.lock().await;
-        let vc_id = call.current_channel().map(|c| c.0);
-
-        let target_text_channel = if let Some(v_id) = vc_id {
-            let map = voice_to_text_map.read().await;
-            map.get(&serenity::ChannelId::from(v_id))
-                .map(|info| info.command_channel)
-        } else {
-            None
-        };
 
         let mut state = music_state.write().await;
+        let target_text_channel = state.notify_channel;
 
         if let Some(next_item) = state.queue.pop_front() {
             let client = reqwest::Client::new();
@@ -109,6 +102,7 @@ pub async fn play_next_music(
             }
         } else {
             state.current_track = None;
+            state.notify_channel = None;
             if let Some(channel) = target_text_channel {
                 let _ = channel.say(&ctx.http, "キューが空になりました").await;
             }

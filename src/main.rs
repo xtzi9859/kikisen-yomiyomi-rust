@@ -63,6 +63,8 @@ async fn main() {
                 commands::skip(),
                 commands::pause(),
                 commands::seek(),
+                commands::clear(),
+                commands::queue(),
                 commands::tc(),
                 commands::volume(),
                 commands::user_setting(),

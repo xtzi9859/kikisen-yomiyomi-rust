@@ -9,6 +9,7 @@ use tokio::sync::RwLock;
 #[derive(serde::Deserialize)]
 pub(crate) struct YtdlOutput {
     title: String,
+    #[serde(default)]
     webpage_url: String,
     #[serde(default)]
     uploader: Option<String>,
@@ -67,6 +68,7 @@ async fn get_guild_music_state(
                 queue: VecDeque::new(),
                 current_track: None,
                 volume: initial_vol,
+                notify_channel: None,
             }))
         })
         .clone()
@@ -245,6 +247,35 @@ async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
     }
 }
 
+async fn get_youtube_playlist_info(url: &str) -> Result<Vec<YtdlOutput>, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&[
+            "--dump-json",
+            "--flat-playlist",
+            "--yes-playlist",
+            "--playlist-end",
+            "100",
+            url,
+        ])
+        .output()
+        .await?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut results = Vec::new();
+
+    for line in stdout.lines() {
+        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
+            results.push(video);
+        }
+    }
+
+    if results.is_empty() {
+        return Err("プレイリストの取得に失敗しました。".into());
+    }
+
+    Ok(results)
+}
+
 #[poise::command(prefix_command, aliases("p"))]
 pub async fn play(
     ctx: Context<'_>,
@@ -271,6 +302,14 @@ pub async fn play(
         return Ok(());
     }
 
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    {
+        let mut state = state_arc.write().await;
+        if state.notify_channel.is_none() {
+            state.notify_channel = Some(ctx.channel_id());
+        }
+    }
+
     let mut item_to_add = None;
     let mut message_to_delete = None;
 
@@ -292,6 +331,55 @@ pub async fn play(
     } else if let Some(args) = query {
         let processing_msg = ctx.say("処理中…").await?;
         if args.starts_with("http") {
+            if looks_like_playlist(&args) {
+                match get_youtube_playlist_info(&args).await {
+                    Ok(videos) => {
+                        let items: Vec<MusicItem> =
+                            videos.iter().map(music_item_from_ytdl).collect();
+
+                        let (should_play, added_count) = {
+                            let mut state = state_arc.write().await;
+                            let should_play = state.current_track.is_none();
+                            let added_count = items.len();
+                            state.queue.extend(items);
+                            (should_play, added_count)
+                        };
+
+                        processing_msg
+                            .edit(
+                                ctx,
+                                poise::CreateReply::default().content(format!(
+                                    "プレイリストから{}曲をキューに追加しました。",
+                                    added_count
+                                )),
+                            )
+                            .await?;
+
+                        if should_play {
+                            play_next_music(
+                                ctx.serenity_context(),
+                                guild_id,
+                                state_arc,
+                                ctx.data().voice_to_text_map.clone(),
+                            )
+                            .await?;
+                        }
+                    }
+
+                    Err(e) => {
+                        processing_msg
+                            .edit(
+                                ctx,
+                                poise::CreateReply::default()
+                                    .content(format!("プレイリストの取得に失敗しました。: {}", e)),
+                            )
+                            .await?;
+                    }
+                }
+
+                return Ok(());
+            }
+
             let info = match get_youtube_info(&args).await {
                 Ok(info) => info,
                 Err(_) => YtdlOutput {
@@ -407,7 +495,6 @@ pub async fn play(
     }
 
     if let Some(item) = item_to_add {
-        let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
         let should_play = {
             let mut state = state_arc.write().await;
             state.queue.push_back(item.clone());
@@ -450,16 +537,41 @@ pub async fn play(
 }
 
 #[poise::command(prefix_command, aliases("s"))]
-pub async fn skip(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn skip(ctx: Context<'_>, count: Option<u32>) -> Result<(), Error> {
     let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
-    let state = state_arc.read().await;
+    let skip_count = count.unwrap_or(1).max(1) as usize;
+    let mut state = state_arc.write().await;
+
+    if state.current_track.is_none() {
+        ctx.say("再生していません。").await?;
+        return Ok(());
+    }
+
+    let to_drop = skip_count.saturating_sub(1).min(state.queue.len());
+    for _ in 0..to_drop {
+        state.queue.pop_front();
+    }
+
+    let actual_skipped = to_drop + 1;
+
     if let Some(handle) = &state.current_track {
         let _ = handle.stop();
-        ctx.say("スキップしました").await?;
-    } else {
-        ctx.say("再生していません").await?;
     }
+
+    drop(state);
+
+    if actual_skipped < skip_count {
+        ctx.say(format!(
+            "キューの残りが少なかったので{}曲スキップしました。",
+            actual_skipped,
+        ))
+        .await?;
+    } else {
+        ctx.say(format!("{}曲スキップしました。", actual_skipped))
+            .await?;
+    }
+
     Ok(())
 }
 
@@ -576,6 +688,27 @@ pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 #[poise::command(prefix_command)]
+pub async fn clear(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+
+    let cleared_count = {
+        let mut state = state_arc.write().await;
+        let count = state.queue.len();
+        state.queue.clear();
+        count
+    };
+
+    if cleared_count == 0 {
+        ctx.say("キューは既に空です。").await?;
+    } else {
+        ctx.say("キューをクリアしました。").await?;
+    }
+
+    Ok(())
+}
+
+#[poise::command(prefix_command)]
 pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
     let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
 
@@ -614,7 +747,8 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
     let target_seconds = match parse_time_to_secs(time_str) {
         Some(secs) => secs,
         None => {
-            ctx.say("時間の形式が不正です。秒数または「h:m:s」などの形式で入力してください。").await?;
+            ctx.say("時間の形式が不正です。秒数または「h:m:s」などの形式で入力してください。")
+                .await?;
             return Ok(());
         }
     };
@@ -624,7 +758,8 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
         let current_position = info.position;
 
         if is_negative {
-            current_position.checked_sub(Duration::from_secs(target_seconds))
+            current_position
+                .checked_sub(Duration::from_secs(target_seconds))
                 .unwrap_or(Duration::from_secs(0))
         } else {
             current_position + Duration::from_secs(target_seconds)
@@ -636,7 +771,12 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
     match handle.seek_async(final_duration).await {
         Ok(actual_time) => {
             let secs = actual_time.as_secs();
-            ctx.say(format!("再生位置を `{}:{:02}` に変更しました", secs / 60, secs % 60)).await?;
+            ctx.say(format!(
+                "再生位置を `{}:{:02}` に変更しました",
+                secs / 60,
+                secs % 60
+            ))
+            .await?;
         }
         Err(e) => {
             ctx.say(format!("シークに失敗しました。: {:?}", e)).await?;
@@ -666,4 +806,158 @@ fn parse_time_to_secs(s: &str) -> Option<u64> {
 
         _ => None,
     }
+}
+
+fn looks_like_playlist(url: &str) -> bool {
+    url.contains("list=") || url.contains("/playlist?")
+}
+
+fn build_queue_pages(queue: &VecDeque<MusicItem>) -> Vec<Vec<(String, String)>> {
+    let mut pages: Vec<Vec<(String, String)>> = Vec::new();
+    let mut current: Vec<(String, String)> = Vec::new();
+
+    for (i, item) in queue.iter().enumerate() {
+        if current.len() >= 24 {
+            pages.push(current);
+            current = Vec::new();
+        }
+
+        let mut value = item.title.clone();
+        if let Some(artist) = &item.artist {
+            value.push_str(&format!(" ― {}", artist));
+        }
+        if let Some(dur) = item.duration {
+            value.push_str(&format!(" `[{}]`", format_duration(dur)));
+        }
+
+        current.push((format!("{}.", i + 1), value));
+    }
+    if !current.is_empty() {
+        pages.push(current);
+    }
+
+    pages
+}
+
+fn queue_embed(pages: &[Vec<(String, String)>], page: usize, total_count: usize) -> serenity::CreateEmbed {
+    let mut embed = serenity::CreateEmbed::new()
+        .title(format!(
+            "再生キュー（{}曲）　ページ {}/{}",
+            total_count,
+            page + 1,
+            pages.len()
+        ))
+        .color(colors::INFO);
+
+    for (name, value) in &pages[page] {
+        embed = embed.field(name, value, false);
+    }
+
+    embed
+}
+
+fn queue_buttons(
+    prev_id: &str,
+    next_id: &str,
+    page: usize,
+    total: usize,
+) -> serenity::CreateActionRow {
+    serenity::CreateActionRow::Buttons(vec![
+        serenity::CreateButton::new(prev_id)
+            .label("◀")
+            .style(serenity::ButtonStyle::Secondary)
+            .disabled(page == 0),
+        serenity::CreateButton::new(next_id)
+            .label("▶")
+            .style(serenity::ButtonStyle::Secondary)
+            .disabled(page >= total - 1),
+    ])
+}
+
+#[poise::command(prefix_command, aliases("q"))]
+pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    let state = state_arc.read().await;
+
+    if state.queue.is_empty() {
+        ctx.say("キューは空です。").await?;
+        return Ok(());
+    }
+
+    let total_count = state.queue.len();
+    let pages = build_queue_pages(&state.queue);
+    drop(state);
+
+    let total = pages.len();
+    let mut current_page = 0usize;
+
+    let ctx_id = ctx.id();
+    let prev_id = format!("{}prev", ctx_id);
+    let next_id = format!("{}next", ctx_id);
+
+    let reply = ctx
+        .send(
+            poise::CreateReply::default()
+                .embed(queue_embed(&pages, current_page, total_count))
+                .components(if total > 1 {
+                    vec![queue_buttons(&prev_id, &next_id, current_page, total)]
+                } else {
+                    vec![]
+                }),
+        )
+        .await?;
+
+    if total == 1 {
+        return Ok(());
+    }
+
+    let message = reply.message().await?;
+
+    loop {
+        let prev_id_c = prev_id.clone();
+        let next_id_c = next_id.clone();
+
+        let Some(press) = message
+            .await_component_interaction(ctx.serenity_context())
+            .author_id(ctx.author().id)
+            .timeout(std::time::Duration::from_secs(120))
+            .filter(move |m| m.data.custom_id == prev_id_c || m.data.custom_id == next_id_c)
+            .await
+        else {
+            let _ = reply
+                .edit(
+                    ctx,
+                    poise::CreateReply::default()
+                        .embed(queue_embed(&pages, current_page, total_count))
+                        .components(vec![]),
+                )
+                .await;
+            break;
+        };
+
+        if press.data.custom_id == prev_id {
+            current_page = current_page.saturating_sub(1);
+        } else {
+            current_page = (current_page + 1).min(total - 1);
+        }
+
+        press
+            .create_response(
+                ctx.serenity_context(),
+                serenity::CreateInteractionResponse::UpdateMessage(
+                    serenity::CreateInteractionResponseMessage::new()
+                        .embed(queue_embed(&pages, current_page, total_count))
+                        .components(vec![queue_buttons(
+                            &prev_id,
+                            &next_id,
+                            current_page,
+                            total,
+                        )]),
+                ),
+            )
+            .await?;
+    }
+
+    Ok(())
 }
