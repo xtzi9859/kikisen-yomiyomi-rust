@@ -315,28 +315,32 @@ pub async fn on_voice_state_update(
         }
         (Some(old_id), Some(new_id)) => {
             if old_id == new_id {
-                let old_stream = old.as_ref().and_then(|s| s.self_stream).unwrap_or(false);
-                let new_stream = new.self_stream.unwrap_or(false);
+                if new_id.get() == bot_channel_id.get() {
+                    let old_stream = old.as_ref().and_then(|s| s.self_stream).unwrap_or(false);
+                    let new_stream = new.self_stream.unwrap_or(false);
 
-                let old_video = old.as_ref().map(|s| s.self_video).unwrap_or(false);
-                let new_video = new.self_video;
+                    let old_video = old.as_ref().map(|s| s.self_video).unwrap_or(false);
+                    let new_video = new.self_video;
 
-                if !old_stream && new_stream {
-                    guild_settings
-                        .read_vc_stream_start
-                        .then(|| format!("{}が配信を開始しました", member_name))
-                } else if old_stream && !new_stream {
-                    guild_settings
-                        .read_vc_stream_stop
-                        .then(|| format!("{}が配信を終了しました", member_name))
-                } else if !old_video && new_video {
-                    guild_settings
-                        .read_vc_camera_on
-                        .then(|| format!("{}がカメラをオンにしました", member_name))
-                } else if old_video && !new_video {
-                    guild_settings
-                        .read_vc_camera_off
-                        .then(|| format!("{}がカメラをオフにしました", member_name))
+                    if !old_stream && new_stream {
+                        guild_settings
+                            .read_vc_stream_start
+                            .then(|| format!("{}が配信を開始しました", member_name))
+                    } else if old_stream && !new_stream {
+                        guild_settings
+                            .read_vc_stream_stop
+                            .then(|| format!("{}が配信を終了しました", member_name))
+                    } else if !old_video && new_video {
+                        guild_settings
+                            .read_vc_camera_on
+                            .then(|| format!("{}がカメラをオンにしました", member_name))
+                    } else if old_video && !new_video {
+                        guild_settings
+                            .read_vc_camera_off
+                            .then(|| format!("{}がカメラをオフにしました", member_name))
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }

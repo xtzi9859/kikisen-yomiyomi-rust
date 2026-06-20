@@ -1,3 +1,4 @@
+use crate::helpers::Pager;
 use crate::types::{Context, Data, Error, VoiceStyleInfo, colors};
 use poise::serenity_prelude as serenity;
 
@@ -14,7 +15,7 @@ pub async fn autocomplete_voice_style<'a>(
         .collect()
 }
 
-fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<Vec<(String, String)>> {
+fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<serenity::CreateEmbed> {
     let mut pages: Vec<Vec<(String, String)>> = Vec::new();
     let mut current: Vec<(String, String)> = Vec::new();
 
@@ -32,122 +33,40 @@ fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<Vec<(String, String
         pages.push(current);
     }
 
+    let total_pages = pages.len().max(1);
+
     pages
-}
+        .into_iter()
+        .enumerate()
+        .map(|(page_idx, fields)| {
+            let mut embed = serenity::CreateEmbed::new()
+                .title("VOICEVOX 話者一覧")
+                .footer(serenity::CreateEmbedFooter::new(format!(
+                    "{}/{} 話者を`/user_setting speaker`で設定できます。",
+                    page_idx + 1,
+                    total_pages
+                )))
+                .color(colors::INFO);
 
-fn voice_style_embed(pages: &[Vec<(String, String)>], page: usize) -> serenity::CreateEmbed {
-    let mut embed = serenity::CreateEmbed::new()
-        .title(format!("VOICEVOX 話者一覧（{}/{}）", page + 1, pages.len()))
-        .color(colors::INFO)
-        .footer(serenity::CreateEmbedFooter::new(
-            "話者IDを /user_setting で設定できます",
-        ));
+            for (name, value) in &fields {
+                embed = embed.field(name, value, true);
+            }
 
-    for (name, value) in &pages[page] {
-        embed = embed.field(name, value, true);
-    }
-
-    embed
-}
-
-fn voice_style_buttons(
-    prev_id: &str,
-    next_id: &str,
-    page: usize,
-    total: usize,
-) -> serenity::CreateActionRow {
-    serenity::CreateActionRow::Buttons(vec![
-        serenity::CreateButton::new(prev_id)
-            .label("◀")
-            .style(serenity::ButtonStyle::Secondary)
-            .disabled(page == 0),
-        serenity::CreateButton::new(next_id)
-            .label("▶")
-            .style(serenity::ButtonStyle::Secondary)
-            .disabled(page >= total - 1),
-    ])
+            embed
+        })
+        .collect()
 }
 
 #[poise::command(slash_command)]
 pub async fn voice_styles(ctx: Context<'_>) -> Result<(), Error> {
-    let pages = build_voice_style_pages(&ctx.data().voice_styles);
+    let mut embeds = build_voice_style_pages(&ctx.data().voice_styles);
 
-    if pages.is_empty() {
-        ctx.say("読み込まれた話者がいません。").await?;
-        return Ok(());
+    if embeds.is_empty() {
+        embeds = vec![
+            serenity::CreateEmbed::new()
+                .description("話者が読み込まれていません。")
+        ];
     }
 
-    let total = pages.len();
-    let mut current_page = 0usize;
-
-    let ctx_id = ctx.id();
-    let prev_id = format!("{}prev", ctx_id);
-    let next_id = format!("{}next", ctx_id);
-
-    let reply = ctx
-        .send(
-            poise::CreateReply::default()
-                .ephemeral(true)
-                .embed(voice_style_embed(&pages, current_page))
-                .components(if total > 1 {
-                    vec![voice_style_buttons(&prev_id, &next_id, current_page, total)]
-                } else {
-                    vec![]
-                }),
-        )
-        .await?;
-
-    if total == 1 {
-        return Ok(());
-    }
-
-    let message = reply.message().await?;
-
-    loop {
-        let prev_id_c = prev_id.clone();
-        let next_id_c = next_id.clone();
-
-        let Some(press) = message
-            .await_component_interaction(ctx.serenity_context())
-            .author_id(ctx.author().id)
-            .timeout(std::time::Duration::from_secs(120))
-            .filter(move |m| m.data.custom_id == prev_id_c || m.data.custom_id == next_id_c)
-            .await
-        else {
-            // タイムアウト: ボタンを無効化して終了
-            let _ = reply
-                .edit(
-                    ctx,
-                    poise::CreateReply::default()
-                        .embed(voice_style_embed(&pages, current_page))
-                        .components(vec![]),
-                )
-                .await;
-            break;
-        };
-
-        if press.data.custom_id == prev_id {
-            current_page = current_page.saturating_sub(1);
-        } else {
-            current_page = (current_page + 1).min(total - 1);
-        }
-
-        press
-            .create_response(
-                ctx.serenity_context(),
-                serenity::CreateInteractionResponse::UpdateMessage(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .embed(voice_style_embed(&pages, current_page))
-                        .components(vec![voice_style_buttons(
-                            &prev_id,
-                            &next_id,
-                            current_page,
-                            total,
-                        )]),
-                ),
-            )
-            .await?;
-    }
-
-    Ok(())
+    Pager::new(embeds).run(ctx).await
 }

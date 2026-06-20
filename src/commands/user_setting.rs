@@ -1,74 +1,14 @@
 use crate::commands::voice_styles::autocomplete_voice_style;
 use crate::db;
-use crate::helpers::get_guild_settings;
 use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 
 #[poise::command(
     slash_command,
-    subcommands("us_speaker", "us_pitch", "us_speed", "us_intonation", "us_reset")
+    subcommands("us_speaker", "us_pitch", "us_speed", "us_intonation", "us_reset", "us_show"),
 )]
-pub async fn user_setting(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
-    let user_id = ctx.author().id.get() as i64;
-
-    let user_settings = db::user_settings::Entity::find()
-        .filter(db::user_settings::Column::GuildId.eq(guild_id.get() as i64))
-        .filter(db::user_settings::Column::UserId.gt(user_id))
-        .one(&ctx.data().db)
-        .await?;
-
-    let speaker_id = user_settings
-        .as_ref()
-        .and_then(|u| u.speaker_id);
-
-    let speed = match user_settings.as_ref().and_then(|u| u.speed) {
-        Some(s) => format!("{}:.2", s),
-        None => "（未設定）".to_string(),
-    };
-
-    let intonation = match user_settings.as_ref().and_then(|u| u.intonation) {
-        Some(i) => format!("{}:.2", i),
-        None => "（未設定）".to_string(),
-    };
-
-    let pitch = match user_settings.as_ref().and_then(|u| u.pitch) {
-        Some(p) => format!("{}:.2", p),
-        None => "（未設定）".to_string(),
-    };
-
-    let speaker_label = speaker_id
-        .and_then(|id| {
-            ctx.data()
-                .voice_styles
-                .iter()
-                .find(|vs| vs.style_id == id as u32)
-                .map(|vs| vs.display_label.clone())
-        })
-        .unwrap_or_else(|| "（未設定）".to_string());
-
-    let display_name = match ctx.author_member().await {
-        Some(member) => member.display_name().to_string(),
-        None => ctx.author().name.clone(),
-    };
-
-    let server_name = ctx
-        .guild()
-        .map(|g| g.name.clone())
-        .unwrap_or_else(|| "不明な鯖".to_string());
-
-    let embed = serenity::CreateEmbed::new()
-        .title(format!("{}のユーザー設定", display_name))
-        .field("話者", speaker_label, false)
-        .field("速度", speed, false)
-        .field("音高", pitch, false)
-        .field("抑揚", intonation, false)
-        .footer(serenity::CreateEmbedFooter::new(server_name))
-        .color(colors::INFO);
-
-    ctx.send(poise::CreateReply::default().embed(embed)).await?;
-
+pub async fn user_setting(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
@@ -300,6 +240,71 @@ where
         update_fn(&mut active);
         active.insert(db).await?;
     }
+
+    Ok(())
+}
+
+//現在のユーザー設定を表示する
+#[poise::command(slash_command, rename="show")]
+pub async fn us_show (ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let user_id = ctx.author().id.get() as i64;
+
+    let user_settings = db::user_settings::Entity::find()
+        .filter(db::user_settings::Column::GuildId.eq(guild_id.get() as i64))
+        .filter(db::user_settings::Column::UserId.gt(user_id))
+        .one(&ctx.data().db)
+        .await?;
+
+    let speaker_id = user_settings
+        .as_ref()
+        .and_then(|u| u.speaker_id);
+
+    let speed = match user_settings.as_ref().and_then(|u| u.speed) {
+        Some(s) => format!("{}:.2", s),
+        None => "（未設定）".to_string(),
+    };
+
+    let intonation = match user_settings.as_ref().and_then(|u| u.intonation) {
+        Some(i) => format!("{}:.2", i),
+        None => "（未設定）".to_string(),
+    };
+
+    let pitch = match user_settings.as_ref().and_then(|u| u.pitch) {
+        Some(p) => format!("{}:.2", p),
+        None => "（未設定）".to_string(),
+    };
+
+    let speaker_label = speaker_id
+        .and_then(|id| {
+            ctx.data()
+                .voice_styles
+                .iter()
+                .find(|vs| vs.style_id == id as u32)
+                .map(|vs| vs.display_label.clone())
+        })
+        .unwrap_or_else(|| "（未設定）".to_string());
+
+    let display_name = match ctx.author_member().await {
+        Some(member) => member.display_name().to_string(),
+        None => ctx.author().name.clone(),
+    };
+
+    let server_name = ctx
+        .guild()
+        .map(|g| g.name.clone())
+        .unwrap_or_else(|| "不明な鯖".to_string());
+
+    let embed = serenity::CreateEmbed::new()
+        .title(format!("{}のユーザー設定", display_name))
+        .field("話者", speaker_label, false)
+        .field("速度", speed, false)
+        .field("音高", pitch, false)
+        .field("抑揚", intonation, false)
+        .footer(serenity::CreateEmbedFooter::new(server_name))
+        .color(colors::INFO);
+
+    ctx.send(poise::CreateReply::default().embed(embed)).await?;
 
     Ok(())
 }
