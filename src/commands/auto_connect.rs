@@ -209,7 +209,7 @@ pub async fn auto_connect(
         return reply_no_permission(&ctx).await;
     }
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let vc_id = channel.id.get() as i64;
     let ctx_id = ctx.id();
     let serenity_ctx = ctx.serenity_context();

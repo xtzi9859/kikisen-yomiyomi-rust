@@ -80,7 +80,7 @@ pub fn permission_from_str(s: &str) -> serenity::Permissions {
 }
 
 pub async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let settings = get_guild_settings(ctx.data(), guild_id).await;
     let required = permission_from_str(&settings.admin_permission);
 

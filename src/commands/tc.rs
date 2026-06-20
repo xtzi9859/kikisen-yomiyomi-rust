@@ -13,7 +13,7 @@ pub async fn add(
     ctx: Context<'_>,
     #[channel_types("Text")] channel: Option<serenity::GuildChannel>,
 ) -> Result<(), Error> {
-    let _ = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。");
+    let _ = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。");
 
     let bot_vc_channel_id = {
         let bot_id = ctx.cache().current_user().id;
@@ -99,7 +99,7 @@ pub async fn remove(
     ctx: Context<'_>,
     #[channel_types("Text")] channel: Option<serenity::GuildChannel>,
 ) -> Result<(), Error> {
-    let _ = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。");
+    let _ = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。");
 
     let bot_vc_channel_id = {
         let bot_id = ctx.cache().current_user().id;

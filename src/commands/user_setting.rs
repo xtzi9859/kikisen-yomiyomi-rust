@@ -72,7 +72,7 @@ async fn us_speaker(
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let user_id = ctx.author().id.get() as i64;
 
@@ -114,7 +114,7 @@ async fn us_speed(
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let user_id = ctx.author().id.get() as i64;
 
@@ -147,7 +147,7 @@ async fn us_pitch(
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let user_id = ctx.author().id.get() as i64;
 
@@ -180,7 +180,7 @@ async fn us_intonation(
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let user_id = ctx.author().id.get() as i64;
 
@@ -207,7 +207,7 @@ async fn us_reset(ctx: Context<'_>) -> Result<(), Error> {
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let user_id = ctx.author().id.get() as i64;
 

@@ -538,7 +538,7 @@ pub async fn play(
 
 #[poise::command(prefix_command, aliases("s"))]
 pub async fn skip(ctx: Context<'_>, count: Option<u32>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
     let skip_count = count.unwrap_or(1).max(1) as usize;
     let mut state = state_arc.write().await;
@@ -577,7 +577,7 @@ pub async fn skip(ctx: Context<'_>, count: Option<u32>) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("vol"))]
 pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !vol_input.is_finite() || vol_input < 0.0 || vol_input > 100.0 {
         let _ = ctx.reply("音量は0～100の範囲内で入力してください。").await;
         return Ok(());
@@ -626,7 +626,7 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("ps", "resume", "unpause", "toggle", "tg"))]
 pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
     let manager = songbird::get(ctx.serenity_context())
         .await
@@ -689,7 +689,7 @@ pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command)]
 pub async fn clear(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
 
     let cleared_count = {
@@ -710,7 +710,7 @@ pub async fn clear(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command)]
 pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
     let manager = songbird::get(ctx.serenity_context())
         .await
@@ -876,7 +876,7 @@ fn queue_buttons(
 
 #[poise::command(prefix_command, aliases("q"))]
 pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
     let state = state_arc.read().await;
 

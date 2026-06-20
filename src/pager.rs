@@ -8,20 +8,22 @@ pub struct Pager {
     ephemeral: bool,
 }
 
-impl Pager {
-    pub fn new(embeds: Vec<serenity::CreateEmbed>) -> Self {
+//impl Pager {
+    //pub fn new(embeds: Vec<serenity::CreateEmbed>) -> Self {
+        //self
+    //}
 
-    }
+    //pub fn timeout(self, timeout: Duration) -> Self {
 
-    pub fn timeout(self, timeout: Duration) -> Self {
+        //self
+    //}
 
-    }
+    //pub fn ephemeral(self, ephemeral: bool) -> Self {
 
-    pub fn ephemeral(self, ephemeral: bool) -> Self {
+        //self
+    //}
 
-    }
-
-    pub async fn run(self, ctx: Context<'_>) -> Result<(), Error> {
-
-    }
-}
+    //pub async fn run(self, ctx: Context<'_>) -> Result<(), Error> {
+        //Ok(())
+    //}
+//}

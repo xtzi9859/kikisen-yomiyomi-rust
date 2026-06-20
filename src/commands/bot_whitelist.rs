@@ -36,7 +36,7 @@ async fn bw_add(
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let bot_id = bot.id.get() as i64;
 
@@ -91,7 +91,7 @@ async fn bw_remove(
 
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let bot_id = bot.id.get() as i64;
 
@@ -133,7 +133,7 @@ async fn bw_remove(
 async fn bw_list(ctx: Context<'_>) -> Result<(), Error> {
     let guild_id = ctx
         .guild_id()
-        .ok_or("サーバー内でのみ実行可能です。")?
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
         .get() as i64;
     let entries = db::bot_whitelist::Entity::find()
         .filter(db::bot_whitelist::Column::GuildId.eq(guild_id))

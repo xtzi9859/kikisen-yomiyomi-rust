@@ -67,7 +67,7 @@ async fn server_admin_permission(
         return reply_no_permission(&ctx).await;
     }
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.admin_permission = Set(permission.clone());
     })
@@ -98,7 +98,7 @@ async fn server_reply_type(
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.reply_prefix_type = Set(reply_type);
     })
@@ -130,7 +130,7 @@ async fn server_command_prefix(ctx: Context<'_>, prefix: String) -> Result<(), E
         return reply_no_permission(&ctx).await;
     }
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.command_prefix = Set(prefix.clone());
     })
@@ -190,7 +190,7 @@ async fn server_speaker_id(
         .await?;
         return Ok(());
     }
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.default_speaker_id = Set(Some(style_id as i32));
     })
@@ -229,7 +229,7 @@ async fn server_voice_speed(
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_speed = Set(Some(speed));
     })
@@ -261,7 +261,7 @@ async fn server_voice_pitch(
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_pitch = Set(Some(pitch));
     })
@@ -292,7 +292,7 @@ async fn server_voice_intonation(
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_intonation = Set(Some(intonation));
     })
@@ -318,7 +318,7 @@ async fn server_voice_reset(ctx: Context<'_>) -> Result<(), Error> {
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_speaker_id = Set(None);
         m.default_speed = Set(None);
@@ -366,7 +366,7 @@ pub async fn server_settings(
         return Ok(());
     };
 
-    let guild_id = ctx.guild_id().ok_or("サーバー内でのみ実行可能です。")?;
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
     upsert_guild_setting(&ctx.data(), guild_id, |m| match setting.as_str() {
         "read_embed" => m.read_embed = Set(value),
