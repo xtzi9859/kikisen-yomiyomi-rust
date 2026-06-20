@@ -5,6 +5,7 @@ use crate::types::{Data, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use std::collections::HashSet;
+use std::time::Duration;
 
 pub async fn on_ready(
     ctx: &serenity::Context,
@@ -374,11 +375,14 @@ pub async fn on_voice_state_update(
         .await?;
     }
 
+    if new_channel_id.map(|id| id.get()) == Some(bot_channel_id.get()) {
+        cancel_auto_disconnect(data, serenity::ChannelId::new(bot_channel_id.into())).await;
+    }
+
     if !should_check_auto_disconnect {
         return Ok(());
     }
 
-    let voice_to_text_map = data.voice_to_text_map.read().await;
     if let Some(call_lock) = manager.get(guild_id) {
         let call = call_lock.lock().await;
         if let Some(current_channel) = call.current_channel() {
@@ -408,13 +412,73 @@ pub async fn on_voice_state_update(
 
             if member_count == 0 {
                 drop(call);
-                drop(voice_to_text_map);
-                manager.remove(guild_id).await.ok();
-                let mut map = data.voice_to_text_map.write().await;
-                map.remove(&channel_id);
+                schedule_auto_disconnect(ctx, data, guild_id, channel_id).await;
             }
         }
     }
 
     Ok(())
+}
+
+async fn cancel_auto_disconnect(data: &Data, channel_id: serenity::ChannelId) {
+    if let Some(handle) = data.pending_disconnects.write().await.remove(&channel_id) {
+        handle.abort();
+        tracing::info!(channel_id = %channel_id, "auto disconnect cancelled");
+    }
+}
+
+async fn schedule_auto_disconnect(
+    ctx: &serenity::Context,
+    data: &Data,
+    guild_id: serenity::GuildId,
+    channel_id: serenity::ChannelId,
+) {
+    {
+        let pending = data.pending_disconnects.read().await;
+        if pending.contains_key(&channel_id) {
+            return;
+        }
+    }
+
+    let ctx_clone = ctx.clone();
+    let voice_map = data.voice_to_text_map.clone();
+    let pending_map = data.pending_disconnects.clone();
+
+    let handle = tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(5)).await;
+
+        let member_count = ctx_clone
+            .cache
+            .guild(guild_id)
+            .map(|guild| {
+                guild
+                    .voice_states
+                    .values()
+                    .filter(|vs| vs.channel_id == Some(channel_id))
+                    .filter(|vs| {
+                        !guild
+                            .members
+                            .get(&vs.user_id)
+                            .map(|m| m.user.bot)
+                            .unwrap_or(false)
+                    })
+                    .count()
+            })
+            .unwrap_or(0);
+
+        if member_count == 0 {
+            if let Some(manager) = songbird::get(&ctx_clone).await {
+                manager.remove(guild_id).await.ok();
+            }
+            voice_map.write().await.remove(&channel_id);
+            tracing::info!(channel_id = %channel_id, "automatically disconnected");
+        }
+
+        pending_map.write().await.remove(&channel_id);
+    });
+
+    data.pending_disconnects
+        .write()
+        .await
+        .insert(channel_id, handle);
 }

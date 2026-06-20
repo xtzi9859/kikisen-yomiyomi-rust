@@ -47,4 +47,5 @@ pub struct Data {
     pub voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
     pub music_state: Arc<RwLock<HashMap<serenity::GuildId, Arc<RwLock<crate::music::MusicState>>>>>,
     pub kanalizer: kanalizer::Kanalizer,
+    pub pending_disconnects: Arc<RwLock<HashMap<serenity::ChannelId, tokio::task::JoinHandle<()>>>>,
 }

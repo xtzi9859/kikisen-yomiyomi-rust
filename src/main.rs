@@ -173,6 +173,7 @@ async fn main() {
                     voice_to_text_map: Arc::new(RwLock::new(HashMap::new())),
                     music_state: Arc::new(RwLock::new(HashMap::new())),
                     kanalizer: kanalizer::Kanalizer::new(),
+                    pending_disconnects: Arc::new(RwLock::new(HashMap::new())),
                 })
             })
         })
