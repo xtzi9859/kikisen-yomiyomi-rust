@@ -739,8 +739,8 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
         }
     };
 
-    let is_relative = input.starts_with("+") || input.starts_with("-");
-    let is_negative = input.starts_with("-");
+    let is_relative = input.starts_with('+') || input.starts_with('-');
+    let is_negative = input.starts_with('-');
 
     let time_str = if is_relative { &input[1..] } else { &input };
 
@@ -787,7 +787,7 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
 }
 
 fn parse_time_to_secs(s: &str) -> Option<u64> {
-    let parts: Vec<&str> = s.split(":").collect();
+    let parts: Vec<&str> = s.split(':').collect();
     match parts.as_slice() {
         [s] => s.parse::<u64>().ok(),
 

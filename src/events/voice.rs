@@ -11,14 +11,6 @@ pub async fn on_ready(
     data_about_bot: &serenity::Ready,
     data: &Data,
 ) -> Result<(), Error> {
-    let all_settings = db::guild_settings::Entity::find().all(&data.db).await?;
-    let mut cache = data.guild_settings_cache.write().await;
-    for settings in all_settings {
-        let guild_id = serenity::GuildId::new(settings.guild_id as u64);
-        cache.insert(guild_id, settings);
-    }
-    drop(cache);
-
     tracing::info!("ready, logged in as {}", data_about_bot.user.name);
 
     if let Some(entries) = crate::helpers::load_and_clear_restart_state() {

@@ -3,6 +3,7 @@ use crate::types::{Context, DEFAULT_PREFIX, Data, Error, colors, PersistedVoiceE
 use std::path::Path;
 use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
+pub use crate::pager::Pager;
 
 const RESTART_STATE_PATH: &str = "./voice_state.json";
 
@@ -31,27 +32,13 @@ pub async fn get_guild_settings(
     data: &Data,
     guild_id: serenity::GuildId,
 ) -> db::guild_settings::Model {
-    {
-        let cache = data.guild_settings_cache.read().await;
-        if let Some(settings) = cache.get(&guild_id) {
-            return settings.clone();
-        }
-    }
-
-    let settings = db::guild_settings::Entity::find()
+    db::guild_settings::Entity::find()
         .filter(db::guild_settings::Column::GuildId.eq(guild_id.get() as i64))
         .one(&data.db)
         .await
         .ok()
         .flatten()
-        .unwrap_or_else(|| db::guild_settings::Model::default_for_guild(guild_id.get() as i64));
-
-    data.guild_settings_cache
-        .write()
-        .await
-        .insert(guild_id, settings.clone());
-
-    settings
+        .unwrap_or_else(|| db::guild_settings::Model::default_for_guild(guild_id.get() as i64))
 }
 
 pub async fn upsert_guild_setting<F>(
@@ -67,7 +54,7 @@ where
         .one(&data.db)
         .await?;
 
-    let updated = if let Some(model) = existing {
+    if let Some(model) = existing {
         let mut active: db::guild_settings::ActiveModel = model.into();
         update_fn(&mut active);
         active.update(&data.db).await?
@@ -78,10 +65,6 @@ where
         active.insert(&data.db).await?
     };
 
-    data.guild_settings_cache
-        .write()
-        .await
-        .insert(guild_id, updated);
     Ok(())
 }
 

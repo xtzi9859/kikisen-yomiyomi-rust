@@ -46,7 +46,5 @@ pub struct Data {
     pub voice_styles: Vec<VoiceStyleInfo>,
     pub voice_to_text_map: Arc<RwLock<HashMap<serenity::ChannelId, VoiceContextInfo>>>,
     pub music_state: Arc<RwLock<HashMap<serenity::GuildId, Arc<RwLock<crate::music::MusicState>>>>>,
-    pub guild_settings_cache:
-        Arc<RwLock<HashMap<serenity::GuildId, crate::db::guild_settings::Model>>>,
     pub kanalizer: kanalizer::Kanalizer,
 }
