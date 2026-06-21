@@ -69,7 +69,6 @@ async fn main() {
                 commands::tc(),
                 commands::volume(),
                 commands::user_setting(),
-                commands::voice_styles(),
                 commands::server_setting(),
                 commands::server_settings(),
                 commands::server_voice(),

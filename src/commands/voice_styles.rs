@@ -1,5 +1,4 @@
-use crate::helpers::Pager;
-use crate::types::{Context, Data, Error, VoiceStyleInfo, colors};
+use crate::types::{Data, Error, VoiceStyleInfo, colors};
 use poise::serenity_prelude as serenity;
 
 pub async fn autocomplete_voice_style<'a>(
@@ -15,9 +14,14 @@ pub async fn autocomplete_voice_style<'a>(
         .collect()
 }
 
-fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<serenity::CreateEmbed> {
-    let mut pages: Vec<Vec<(String, String)>> = Vec::new();
-    let mut current: Vec<(String, String)> = Vec::new();
+pub(crate) fn build_voice_style_page_with_select(
+    styles: &[VoiceStyleInfo],
+) -> (
+    Vec<serenity::CreateEmbed>,
+    Vec<Vec<serenity::CreateSelectMenuOption>>,
+) {
+    let mut pages: Vec<Vec<(String, String, u32)>> = Vec::new();
+    let mut current: Vec<(String, String, u32)> = Vec::new();
 
     for style in styles {
         if current.len() >= 24 {
@@ -25,8 +29,9 @@ fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<serenity::CreateEmb
             current = Vec::new();
         }
         current.push((
-            format!("{}（{}）", style.character_name, style.style_name),
+            style.display_label.clone(),
             format!("`{}`", style.style_id),
+            style.style_id,
         ));
     }
     if !current.is_empty() {
@@ -40,33 +45,24 @@ fn build_voice_style_pages(styles: &[VoiceStyleInfo]) -> Vec<serenity::CreateEmb
         .enumerate()
         .map(|(page_idx, fields)| {
             let mut embed = serenity::CreateEmbed::new()
-                .title("VOICEVOX 話者一覧")
+                .title("VOICEVOXの話者一覧")
                 .footer(serenity::CreateEmbedFooter::new(format!(
-                    "{}/{} 話者を`/user_setting speaker`で設定できます。",
+                    "{}/{} ページ　下のリストから話者を選択すると設定されます。",
                     page_idx + 1,
                     total_pages
                 )))
                 .color(colors::INFO);
 
-            for (name, value) in &fields {
+            let mut options = Vec::with_capacity(fields.len());
+            for (name, value, style_id) in &fields {
                 embed = embed.field(name, value, true);
+                options.push(serenity::CreateSelectMenuOption::new(
+                    name.clone(),
+                    style_id.to_string(),
+                ));
             }
 
-            embed
+            (embed, options)
         })
-        .collect()
-}
-
-#[poise::command(slash_command)]
-pub async fn voice_styles(ctx: Context<'_>) -> Result<(), Error> {
-    let mut embeds = build_voice_style_pages(&ctx.data().voice_styles);
-
-    if embeds.is_empty() {
-        embeds = vec![
-            serenity::CreateEmbed::new()
-                .description("話者が読み込まれていません。")
-        ];
-    }
-
-    Pager::new(embeds).run(ctx).await
+        .unzip()
 }

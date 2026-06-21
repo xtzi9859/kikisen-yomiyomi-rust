@@ -16,4 +16,3 @@ pub use server_setting::{server_setting, server_settings, server_voice};
 pub use tc::tc;
 pub use user_setting::user_setting;
 pub use vc::vc;
-pub use voice_styles::voice_styles;
