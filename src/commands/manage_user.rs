@@ -107,20 +107,11 @@ async fn us_speaker(
         None => format!("{}の話者の設定を解除しました。", target.display_name()),
     };
 
-    let author_name = ctx
-        .author_member()
-        .await
-        .map(|m| m.display_name().into())
-        .unwrap_or_else(|| ctx.author().name.clone());
-
-    let author_icon = ctx.author().avatar_url().unwrap_or_default();
-
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(description)
-                .color(colors::SUCCEED)
-                .author(serenity::CreateEmbedAuthor::new(author_name).icon_url(author_icon)),
+                .color(colors::SUCCEED),
         ),
     )
     .await?;
@@ -164,20 +155,11 @@ async fn us_speed(
         ),
     };
 
-    let author_name = ctx
-        .author_member()
-        .await
-        .map(|m| m.display_name().into())
-        .unwrap_or_else(|| ctx.author().name.clone());
-
-    let author_icon = ctx.author().avatar_url().unwrap_or_default();
-
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(description)
-                .color(colors::SUCCEED)
-                .author(serenity::CreateEmbedAuthor::new(author_name).icon_url(author_icon)),
+                .color(colors::SUCCEED),
         ),
     )
     .await?;
@@ -220,20 +202,11 @@ async fn us_pitch(
         ),
     };
 
-    let author_name = ctx
-        .author_member()
-        .await
-        .map(|m| m.display_name().into())
-        .unwrap_or_else(|| ctx.author().name.clone());
-
-    let author_icon = ctx.author().avatar_url().unwrap_or_default();
-
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(description)
-                .color(colors::SUCCEED)
-                .author(serenity::CreateEmbedAuthor::new(author_name).icon_url(author_icon)),
+                .color(colors::SUCCEED),
         ),
     )
     .await?;
@@ -277,20 +250,11 @@ async fn us_intonation(
         ),
     };
 
-    let author_name = ctx
-        .author_member()
-        .await
-        .map(|m| m.display_name().into())
-        .unwrap_or_else(|| ctx.author().name.clone());
-
-    let author_icon = ctx.author().avatar_url().unwrap_or_default();
-
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(description)
-                .color(colors::SUCCEED)
-                .author(serenity::CreateEmbedAuthor::new(author_name).icon_url(author_icon)),
+                .color(colors::SUCCEED),
         ),
     )
     .await?;
@@ -320,14 +284,6 @@ async fn us_reset(
     })
     .await?;
 
-    let author_name = ctx
-        .author_member()
-        .await
-        .map(|m| m.display_name().into())
-        .unwrap_or_else(|| ctx.author().name.clone());
-
-    let author_icon = ctx.author().avatar_url().unwrap_or_default();
-
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
@@ -335,8 +291,7 @@ async fn us_reset(
                     "{}の個人設定をリセットしました。",
                     target.display_name()
                 ))
-                .color(colors::SUCCEED)
-                .author(serenity::CreateEmbedAuthor::new(author_name).icon_url(author_icon)),
+                .color(colors::SUCCEED),
         ),
     )
     .await?;
@@ -392,14 +347,6 @@ pub async fn us_show(
         .map(|g| g.name.clone())
         .unwrap_or_else(|| "不明な鯖".to_string());
 
-    let author_name = ctx
-        .author_member()
-        .await
-        .map(|m| m.display_name().into())
-        .unwrap_or_else(|| ctx.author().name.clone());
-
-    let author_icon = ctx.author().avatar_url().unwrap_or_default();
-
     let embed = serenity::CreateEmbed::new()
         .title(format!("{}のユーザー設定", target.display_name()))
         .field("話者", speaker_label, false)
@@ -407,8 +354,7 @@ pub async fn us_show(
         .field("音高", pitch, false)
         .field("抑揚", intonation, false)
         .footer(serenity::CreateEmbedFooter::new(server_name))
-        .color(colors::INFO)
-        .author(serenity::CreateEmbedAuthor::new(author_name).icon_url(author_icon));
+        .color(colors::INFO);
 
     ctx.send(poise::CreateReply::default().embed(embed)).await?;
 
