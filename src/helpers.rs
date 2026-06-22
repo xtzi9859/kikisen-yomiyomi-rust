@@ -2,7 +2,7 @@ use crate::db;
 use crate::types::{Context, DEFAULT_PREFIX, Data, Error, colors, PersistedVoiceEntry};
 use std::path::Path;
 use poise::serenity_prelude as serenity;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ActiveModelTrait, ColumnTrait, Condition,EntityTrait, QueryFilter};
 pub use crate::pager::Pager;
 
 const RESTART_STATE_PATH: &str = "./voice_state.json";
@@ -68,32 +68,45 @@ where
     Ok(())
 }
 
-pub fn permission_from_str(s: &str) -> serenity::Permissions {
-    match s {
-        "manage_messages" => serenity::Permissions::MANAGE_MESSAGES,
-        "manage_channels" => serenity::Permissions::MANAGE_CHANNELS,
-        "moderate_members" => serenity::Permissions::MODERATE_MEMBERS,
-        "manage_guild" => serenity::Permissions::MANAGE_GUILD,
-        "administrator" => serenity::Permissions::ADMINISTRATOR,
-        _ => serenity::Permissions::ADMINISTRATOR,
-    }
-}
-
 pub async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
-    let settings = get_guild_settings(ctx.data(), guild_id).await;
-    let required = permission_from_str(&settings.admin_permission);
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?.get() as i64;
+    let user_id = ctx.author().id.get() as i64;
+    let mut role_ids = Vec::new();
 
-    let Some(member) = ctx.author_member().await else {
-        return Ok(false);
-    };
+    if let Some(member) = ctx.author_member().await {
+        let permissions = member.permissions(ctx.cache()).unwrap_or_default();
 
-    let permissions = ctx
-        .guild()
-        .map(|g| g.member_permissions(&*member))
-        .unwrap_or(serenity::Permissions::empty());
+        if permissions.administrator() {
+            return Ok(true);
+        }
 
-    Ok(permissions.contains(required))
+        role_ids = member.roles.iter().map(|role_id| role_id.get() as i64).collect();
+    }
+
+    let db = &ctx.data().db;
+
+    let mut permission_conditions = Condition::any()
+        .add(
+            Condition::all()
+                .add(db::server_manager::Column::ManagerId.eq(user_id))
+                .add(db::server_manager::Column::IsRole.eq(false)),
+        );
+
+    if !role_ids.is_empty() {
+        permission_conditions = permission_conditions.add(
+            Condition::all()
+                .add(db::server_manager::Column::ManagerId.is_in(role_ids))
+                .add(db::server_manager::Column::IsRole.eq(true)),
+        );
+    }
+
+    let count = db::server_manager::Entity::find()
+        .filter(db::server_manager::Column::GuildId.eq(guild_id))
+        .filter(permission_conditions)
+        .one(db)
+        .await?;
+
+    Ok(count.is_some())
 }
 
 pub async fn reply_no_permission(ctx: &Context<'_>) -> Result<(), Error> {

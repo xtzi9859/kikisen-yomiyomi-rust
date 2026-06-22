@@ -47,235 +47,6 @@ struct FfprobeTags {
     date: Option<String>,
 }
 
-async fn get_guild_music_state(
-    data: &Data,
-    guild_id: serenity::GuildId,
-) -> Arc<RwLock<MusicState>> {
-    {
-        let states = data.music_state.read().await;
-        if let Some(state) = states.get(&guild_id) {
-            return state.clone();
-        }
-    }
-
-    let initial_vol = get_guild_settings(data, guild_id).await.default_music_vol;
-
-    let mut states = data.music_state.write().await;
-    states
-        .entry(guild_id)
-        .or_insert_with(|| {
-            Arc::new(RwLock::new(MusicState {
-                queue: VecDeque::new(),
-                current_track: None,
-                volume: initial_vol,
-                notify_channel: None,
-            }))
-        })
-        .clone()
-}
-
-fn build_queue_added_embed(item: &MusicItem) -> serenity::CreateEmbed {
-    let mut description = item.title.clone();
-    if let Some(artist) = &item.artist {
-        description.push_str(&format!(" ― {}", artist));
-    }
-    if let Some(album) = &item.album {
-        description.push_str(&format!(" / {}", album));
-    }
-    if let Some(year) = &item.release_year {
-        description.push_str(&format!(" ({})", year));
-    }
-
-    let mut embed = serenity::CreateEmbed::new()
-        .title("キューに追加しました")
-        .description(description)
-        .color(colors::SUCCEED);
-
-    if item.is_ytdl {
-        embed = embed.url(item.url.clone());
-    }
-
-    if let Some(thumb) = &item.thumbnail {
-        embed = embed.thumbnail(thumb.clone());
-    }
-
-    if let Some(dur) = item.duration {
-        embed = embed.footer(serenity::CreateEmbedFooter::new(format!(
-            "{}",
-            format_duration(dur)
-        )));
-    }
-
-    embed
-}
-
-fn music_item_from_ytdl(info: &YtdlOutput) -> MusicItem {
-    let release_year = info
-        .upload_date
-        .as_deref()
-        .and_then(|d| d.get(..4))
-        .and_then(|y| y.parse::<u32>().ok());
-    MusicItem {
-        url: info.webpage_url.clone(),
-        title: info.title.clone(),
-        artist: info.uploader.clone(),
-        album: None,
-        release_year,
-        duration: info.duration.map(|d| d as u64),
-        thumbnail: info.thumbnail.clone(),
-        albumart: None,
-        is_ytdl: true,
-    }
-}
-
-async fn get_localfile_metadata(
-    url: &str,
-) -> (
-    Option<String>,
-    Option<String>,
-    Option<String>,
-    Option<u32>,
-    Option<u64>,
-    Option<Vec<u8>>,
-) {
-    let (title, artist, album, release_year, duration) = get_ffprobe_metadata(url)
-        .await
-        .unwrap_or((None, None, None, None, None));
-
-    let album_art = extract_album_art(url).await;
-
-    (title, artist, album, release_year, duration, album_art)
-}
-
-async fn extract_album_art(url: &str) -> Option<Vec<u8>> {
-    let tmp_path = format!("/tmp/kikisen_albumart_{}.jpg", std::process::id());
-
-    let status = tokio::process::Command::new("ffmpeg")
-        .args(&["-y", "-i", url, "-an", "-vcodec", "copy", &tmp_path])
-        .output()
-        .await
-        .ok()?;
-
-    if !status.status.success() {
-        return None;
-    }
-
-    let file_data = tokio::fs::read(&tmp_path).await.ok()?;
-    let _ = tokio::fs::remove_file(&tmp_path).await;
-
-    if file_data.is_empty() {
-        None
-    } else {
-        Some(file_data)
-    }
-}
-
-async fn get_ffprobe_metadata(
-    url: &str,
-) -> Option<(
-    Option<String>,
-    Option<String>,
-    Option<String>,
-    Option<u32>,
-    Option<u64>,
-)> {
-    let output = tokio::process::Command::new("ffprobe")
-        .args(&["-v", "quiet", "-print_format", "json", "-show_format", url])
-        .output()
-        .await
-        .ok()?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let probe: FfprobeOutput = serde_json::from_str(&stdout).ok()?;
-
-    let duration = probe
-        .format
-        .duration
-        .as_deref()
-        .and_then(|d| d.parse::<f64>().ok())
-        .map(|d| d as u64);
-
-    let (title, artist, album, release_year) = if let Some(tags) = probe.format.tags {
-        let year = tags
-            .date
-            .as_deref()
-            .and_then(|d| d.get(..4))
-            .and_then(|y| y.parse::<u32>().ok());
-        (tags.title, tags.artist, tags.album, year)
-    } else {
-        (None, None, None, None)
-    };
-
-    Some((title, artist, album, release_year, duration))
-}
-
-async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
-    let output = tokio::process::Command::new("yt-dlp")
-        .args(&[
-            "--dump-json",
-            "--default-search",
-            "ytsearch",
-            &format!("ytsearch10:{}", query),
-        ])
-        .output()
-        .await?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut results = Vec::new();
-
-    for line in stdout.lines() {
-        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
-            results.push(video);
-        }
-    }
-
-    Ok(results)
-}
-
-async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
-    let output = tokio::process::Command::new("yt-dlp")
-        .args(&["--dump-json", "--no-playlist", url])
-        .output()
-        .await?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-
-    if let Some(first_line) = stdout.lines().next() {
-        let video = serde_json::from_str::<YtdlOutput>(first_line)?;
-        Ok(video)
-    } else {
-        Err("動画情報の取得に失敗しました".into())
-    }
-}
-
-async fn get_youtube_playlist_info(url: &str) -> Result<Vec<YtdlOutput>, Error> {
-    let output = tokio::process::Command::new("yt-dlp")
-        .args(&[
-            "--dump-json",
-            "--flat-playlist",
-            "--yes-playlist",
-            "--playlist-end",
-            "100",
-            url,
-        ])
-        .output()
-        .await?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut results = Vec::new();
-
-    for line in stdout.lines() {
-        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
-            results.push(video);
-        }
-    }
-
-    if results.is_empty() {
-        return Err("プレイリストの取得に失敗しました。".into());
-    }
-
-    Ok(results)
-}
-
 #[poise::command(prefix_command, aliases("p"))]
 pub async fn play(
     ctx: Context<'_>,
@@ -786,6 +557,108 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
     Ok(())
 }
 
+#[poise::command(prefix_command, aliases("q"))]
+pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
+    let state = state_arc.read().await;
+
+    if state.queue.is_empty() {
+        ctx.say("キューは空です。").await?;
+        return Ok(());
+    }
+
+    let total_count = state.queue.len();
+    let pages = build_queue_pages(&state.queue);
+    drop(state);
+
+    let total = pages.len();
+    let mut current_page = 0usize;
+
+    let ctx_id = ctx.id();
+    let prev_id = format!("{}prev", ctx_id);
+    let next_id = format!("{}next", ctx_id);
+
+    let reply = ctx
+        .send(
+            poise::CreateReply::default()
+                .embed(queue_embed(&pages, current_page, total_count))
+                .components(if total > 1 {
+                    vec![queue_buttons(&prev_id, &next_id, current_page, total)]
+                } else {
+                    vec![]
+                }),
+        )
+        .await?;
+
+    if total == 1 {
+        return Ok(());
+    }
+
+    let message = reply.message().await?;
+
+    loop {
+        let prev_id_c = prev_id.clone();
+        let next_id_c = next_id.clone();
+
+        let Some(press) = message
+            .await_component_interaction(ctx.serenity_context())
+            .author_id(ctx.author().id)
+            .timeout(std::time::Duration::from_secs(120))
+            .filter(move |m| m.data.custom_id == prev_id_c || m.data.custom_id == next_id_c)
+            .await
+        else {
+            let _ = reply
+                .edit(
+                    ctx,
+                    poise::CreateReply::default()
+                        .embed(queue_embed(&pages, current_page, total_count))
+                        .components(vec![]),
+                )
+                .await;
+            break;
+        };
+
+        if press.data.custom_id == prev_id {
+            current_page = current_page.saturating_sub(1);
+        } else {
+            current_page = (current_page + 1).min(total - 1);
+        }
+
+        press
+            .create_response(
+                ctx.serenity_context(),
+                serenity::CreateInteractionResponse::UpdateMessage(
+                    serenity::CreateInteractionResponseMessage::new()
+                        .embed(queue_embed(&pages, current_page, total_count))
+                        .components(vec![queue_buttons(
+                            &prev_id,
+                            &next_id,
+                            current_page,
+                            total,
+                        )]),
+                ),
+            )
+            .await?;
+    }
+
+    Ok(())
+}
+
+pub async fn now(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
+
+
+    ctx.send(poise::CreateReply::default().embed(
+        serenity::CreateEmbed::new()
+            .title("Now playing")
+    ))
+    .await?;
+
+    Ok(())
+}
+
 fn parse_time_to_secs(s: &str) -> Option<u64> {
     let parts: Vec<&str> = s.split(':').collect();
     match parts.as_slice() {
@@ -874,90 +747,231 @@ fn queue_buttons(
     ])
 }
 
-#[poise::command(prefix_command, aliases("q"))]
-pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
-    let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
-    let state = state_arc.read().await;
-
-    if state.queue.is_empty() {
-        ctx.say("キューは空です。").await?;
-        return Ok(());
+async fn get_guild_music_state(
+    data: &Data,
+    guild_id: serenity::GuildId,
+) -> Arc<RwLock<MusicState>> {
+    {
+        let states = data.music_state.read().await;
+        if let Some(state) = states.get(&guild_id) {
+            return state.clone();
+        }
     }
 
-    let total_count = state.queue.len();
-    let pages = build_queue_pages(&state.queue);
-    drop(state);
+    let initial_vol = get_guild_settings(data, guild_id).await.default_music_vol;
 
-    let total = pages.len();
-    let mut current_page = 0usize;
+    let mut states = data.music_state.write().await;
+    states
+        .entry(guild_id)
+        .or_insert_with(|| {
+            Arc::new(RwLock::new(MusicState {
+                queue: VecDeque::new(),
+                current_track: None,
+                volume: initial_vol,
+                notify_channel: None,
+            }))
+        })
+        .clone()
+}
 
-    let ctx_id = ctx.id();
-    let prev_id = format!("{}prev", ctx_id);
-    let next_id = format!("{}next", ctx_id);
+fn build_queue_added_embed(item: &MusicItem) -> serenity::CreateEmbed {
+    let mut description = item.title.clone();
+    if let Some(artist) = &item.artist {
+        description.push_str(&format!(" ― {}", artist));
+    }
+    if let Some(album) = &item.album {
+        description.push_str(&format!(" / {}", album));
+    }
+    if let Some(year) = &item.release_year {
+        description.push_str(&format!(" ({})", year));
+    }
 
-    let reply = ctx
-        .send(
-            poise::CreateReply::default()
-                .embed(queue_embed(&pages, current_page, total_count))
-                .components(if total > 1 {
-                    vec![queue_buttons(&prev_id, &next_id, current_page, total)]
-                } else {
-                    vec![]
-                }),
-        )
+    let mut embed = serenity::CreateEmbed::new()
+        .title("キューに追加しました")
+        .description(description)
+        .color(colors::SUCCEED);
+
+    if item.is_ytdl {
+        embed = embed.url(item.url.clone());
+    }
+
+    if let Some(thumb) = &item.thumbnail {
+        embed = embed.thumbnail(thumb.clone());
+    }
+
+    if let Some(dur) = item.duration {
+        embed = embed.footer(serenity::CreateEmbedFooter::new(format!(
+            "{}",
+            format_duration(dur)
+        )));
+    }
+
+    embed
+}
+
+fn music_item_from_ytdl(info: &YtdlOutput) -> MusicItem {
+    let release_year = info
+        .upload_date
+        .as_deref()
+        .and_then(|d| d.get(..4))
+        .and_then(|y| y.parse::<u32>().ok());
+    MusicItem {
+        url: info.webpage_url.clone(),
+        title: info.title.clone(),
+        artist: info.uploader.clone(),
+        album: None,
+        release_year,
+        duration: info.duration.map(|d| d as u64),
+        thumbnail: info.thumbnail.clone(),
+        albumart: None,
+        is_ytdl: true,
+    }
+}
+
+async fn get_localfile_metadata(
+    url: &str,
+) -> (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<u32>,
+    Option<u64>,
+    Option<Vec<u8>>,
+) {
+    let (title, artist, album, release_year, duration) = get_ffprobe_metadata(url)
+        .await
+        .unwrap_or((None, None, None, None, None));
+
+    let album_art = extract_album_art(url).await;
+
+    (title, artist, album, release_year, duration, album_art)
+}
+
+async fn extract_album_art(url: &str) -> Option<Vec<u8>> {
+    let tmp_path = format!("/tmp/kikisen_albumart_{}.jpg", std::process::id());
+
+    let status = tokio::process::Command::new("ffmpeg")
+        .args(&["-y", "-i", url, "-an", "-vcodec", "copy", &tmp_path])
+        .output()
+        .await
+        .ok()?;
+
+    if !status.status.success() {
+        return None;
+    }
+
+    let file_data = tokio::fs::read(&tmp_path).await.ok()?;
+    let _ = tokio::fs::remove_file(&tmp_path).await;
+
+    if file_data.is_empty() {
+        None
+    } else {
+        Some(file_data)
+    }
+}
+
+async fn get_ffprobe_metadata(
+    url: &str,
+) -> Option<(
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<u32>,
+    Option<u64>,
+)> {
+    let output = tokio::process::Command::new("ffprobe")
+        .args(&["-v", "quiet", "-print_format", "json", "-show_format", url])
+        .output()
+        .await
+        .ok()?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let probe: FfprobeOutput = serde_json::from_str(&stdout).ok()?;
+
+    let duration = probe
+        .format
+        .duration
+        .as_deref()
+        .and_then(|d| d.parse::<f64>().ok())
+        .map(|d| d as u64);
+
+    let (title, artist, album, release_year) = if let Some(tags) = probe.format.tags {
+        let year = tags
+            .date
+            .as_deref()
+            .and_then(|d| d.get(..4))
+            .and_then(|y| y.parse::<u32>().ok());
+        (tags.title, tags.artist, tags.album, year)
+    } else {
+        (None, None, None, None)
+    };
+
+    Some((title, artist, album, release_year, duration))
+}
+
+async fn search_youtube(query: &str) -> Result<Vec<YtdlOutput>, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&[
+            "--dump-json",
+            "--default-search",
+            "ytsearch",
+            &format!("ytsearch10:{}", query),
+        ])
+        .output()
         .await?;
 
-    if total == 1 {
-        return Ok(());
-    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut results = Vec::new();
 
-    let message = reply.message().await?;
-
-    loop {
-        let prev_id_c = prev_id.clone();
-        let next_id_c = next_id.clone();
-
-        let Some(press) = message
-            .await_component_interaction(ctx.serenity_context())
-            .author_id(ctx.author().id)
-            .timeout(std::time::Duration::from_secs(120))
-            .filter(move |m| m.data.custom_id == prev_id_c || m.data.custom_id == next_id_c)
-            .await
-        else {
-            let _ = reply
-                .edit(
-                    ctx,
-                    poise::CreateReply::default()
-                        .embed(queue_embed(&pages, current_page, total_count))
-                        .components(vec![]),
-                )
-                .await;
-            break;
-        };
-
-        if press.data.custom_id == prev_id {
-            current_page = current_page.saturating_sub(1);
-        } else {
-            current_page = (current_page + 1).min(total - 1);
+    for line in stdout.lines() {
+        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
+            results.push(video);
         }
-
-        press
-            .create_response(
-                ctx.serenity_context(),
-                serenity::CreateInteractionResponse::UpdateMessage(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .embed(queue_embed(&pages, current_page, total_count))
-                        .components(vec![queue_buttons(
-                            &prev_id,
-                            &next_id,
-                            current_page,
-                            total,
-                        )]),
-                ),
-            )
-            .await?;
     }
 
-    Ok(())
+    Ok(results)
+}
+
+async fn get_youtube_info(url: &str) -> Result<YtdlOutput, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&["--dump-json", "--no-playlist", url])
+        .output()
+        .await?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    if let Some(first_line) = stdout.lines().next() {
+        let video = serde_json::from_str::<YtdlOutput>(first_line)?;
+        Ok(video)
+    } else {
+        Err("動画情報の取得に失敗しました".into())
+    }
+}
+
+async fn get_youtube_playlist_info(url: &str) -> Result<Vec<YtdlOutput>, Error> {
+    let output = tokio::process::Command::new("yt-dlp")
+        .args(&[
+            "--dump-json",
+            "--flat-playlist",
+            "--yes-playlist",
+            "--playlist-end",
+            "100",
+            url,
+        ])
+        .output()
+        .await?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut results = Vec::new();
+
+    for line in stdout.lines() {
+        if let Ok(video) = serde_json::from_str::<YtdlOutput>(line) {
+            results.push(video);
+        }
+    }
+
+    if results.is_empty() {
+        return Err("プレイリストの取得に失敗しました。".into());
+    }
+
+    Ok(results)
 }

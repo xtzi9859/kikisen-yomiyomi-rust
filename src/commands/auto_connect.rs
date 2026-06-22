@@ -5,6 +5,180 @@ use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::Mentionable;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 
+#[poise::command(slash_command)]
+pub async fn auto_connect(
+    ctx: Context<'_>,
+    #[channel_types("Voice", "Stage")]
+    #[description = "自動接続対象になるボイスチャンネル"]
+    channel: serenity::GuildChannel,
+) -> Result<(), Error> {
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let vc_id = channel.id.get() as i64;
+    let ctx_id = ctx.id();
+    let serenity_ctx = ctx.serenity_context();
+    let author_id = ctx.author().id;
+    let channel_mention = channel.mention().to_string();
+    let id = |s: &str| format!("{}{}", ctx_id, s);
+
+    let existing = db::auto_connections::Entity::find_by_id(vc_id)
+        .one(&ctx.data().db)
+        .await?;
+
+    if existing.is_some() {
+        let reply = ctx
+            .send(
+                poise::CreateReply::default()
+                    .ephemeral(true)
+                    .embed(
+                        serenity::CreateEmbed::new()
+                            .description(format!(
+                                "{}は既に自動接続の対象です。操作を選択してください。",
+                                channel_mention
+                            ))
+                            .color(colors::WARN),
+                    )
+                    .components(vec![serenity::CreateActionRow::Buttons(vec![
+                        serenity::CreateButton::new(id("edit"))
+                            .label("編集")
+                            .style(serenity::ButtonStyle::Primary),
+                        serenity::CreateButton::new(id("delete"))
+                            .label("削除")
+                            .style(serenity::ButtonStyle::Danger),
+                    ])]),
+            )
+            .await?;
+
+        let msg = reply.message().await?;
+        let prefix = format!("{}", ctx_id);
+
+        let Some(press) = msg
+            .await_component_interaction(serenity_ctx)
+            .author_id(author_id)
+            .timeout(std::time::Duration::from_secs(60))
+            .filter(move |m| m.data.custom_id.starts_with(&prefix))
+            .await
+        else {
+            let _ = reply
+                .edit(
+                    ctx,
+                    poise::CreateReply::default()
+                        .embed(
+                            serenity::CreateEmbed::new()
+                                .description("タイムアウトしました。")
+                                .color(colors::WARN),
+                        )
+                        .components(vec![]),
+                )
+                .await;
+            return Ok(());
+        };
+
+        if press.data.custom_id == id("delete") {
+            db::reading_targets::Entity::delete_many()
+                .filter(db::reading_targets::Column::VoiceChannelId.eq(vc_id))
+                .exec(&ctx.data().db)
+                .await?;
+            db::auto_connections::Entity::delete_by_id(vc_id)
+                .exec(&ctx.data().db)
+                .await
+                .ok();
+
+            press
+                .create_response(
+                    serenity_ctx,
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        serenity::CreateInteractionResponseMessage::new()
+                            .embed(
+                                serenity::CreateEmbed::new()
+                                    .description(format!(
+                                        "{}を自動接続対象から削除しました。",
+                                        channel_mention
+                                    ))
+                                    .color(colors::SUCCEED),
+                            )
+                            .components(vec![]),
+                    ),
+                )
+                .await?;
+        } else {
+            press
+                .create_response(
+                    serenity_ctx,
+                    serenity::CreateInteractionResponse::UpdateMessage(
+                        serenity::CreateInteractionResponseMessage::new()
+                            .embed(
+                                serenity::CreateEmbed::new()
+                                    .description(format!(
+                                        "{}の設定を編集します。設定を入力してください。",
+                                        channel_mention,
+                                    ))
+                                    .color(colors::INFO),
+                            )
+                            .components(config_ui_components(
+                                &id("notify"),
+                                &id("reading"),
+                                &id("save"),
+                                &id("cancel"),
+                            )),
+                    ),
+                )
+                .await?;
+
+            config_ui_loop(
+                serenity_ctx,
+                &msg,
+                author_id,
+                &ctx.data().db,
+                guild_id,
+                vc_id,
+                &channel_mention,
+                ctx_id,
+            )
+            .await?;
+        }
+    } else {
+        let reply = ctx
+            .send(
+                poise::CreateReply::default()
+                    .ephemeral(true)
+                    .embed(
+                        serenity::CreateEmbed::new()
+                            .description(format!(
+                                "{}を自動接続の対象に追加します。設定を入力してください。",
+                                channel_mention
+                            ))
+                            .color(colors::INFO),
+                    )
+                    .components(config_ui_components(
+                        &id("notify"),
+                        &id("reading"),
+                        &id("save"),
+                        &id("cancel"),
+                    )),
+            )
+            .await?;
+
+        let msg = reply.message().await?;
+        config_ui_loop(
+            serenity_ctx,
+            &msg,
+            author_id,
+            &ctx.data().db,
+            guild_id,
+            vc_id,
+            &channel_mention,
+            ctx_id,
+        )
+        .await?;
+    }
+
+    Ok(())
+}
+
 fn config_ui_components(
     notify_id: &str,
     reading_id: &str,
@@ -196,178 +370,4 @@ async fn config_ui_loop(
             return Ok(());
         }
     }
-}
-
-#[poise::command(slash_command)]
-pub async fn auto_connect(
-    ctx: Context<'_>,
-    #[channel_types("Voice", "Stage")]
-    #[description = "自動接続対象になるボイスチャンネル"]
-    channel: serenity::GuildChannel,
-) -> Result<(), Error> {
-    if !check_admin_permission(&ctx).await? {
-        return reply_no_permission(&ctx).await;
-    }
-
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
-    let vc_id = channel.id.get() as i64;
-    let ctx_id = ctx.id();
-    let serenity_ctx = ctx.serenity_context();
-    let author_id = ctx.author().id;
-    let channel_mention = channel.mention().to_string();
-    let id = |s: &str| format!("{}{}", ctx_id, s);
-
-    let existing = db::auto_connections::Entity::find_by_id(vc_id)
-        .one(&ctx.data().db)
-        .await?;
-
-    if existing.is_some() {
-        let reply = ctx
-            .send(
-                poise::CreateReply::default()
-                    .ephemeral(true)
-                    .embed(
-                        serenity::CreateEmbed::new()
-                            .description(format!(
-                                "{}は既に自動接続の対象です。操作を選択してください。",
-                                channel_mention
-                            ))
-                            .color(colors::WARN),
-                    )
-                    .components(vec![serenity::CreateActionRow::Buttons(vec![
-                        serenity::CreateButton::new(id("edit"))
-                            .label("編集")
-                            .style(serenity::ButtonStyle::Primary),
-                        serenity::CreateButton::new(id("delete"))
-                            .label("削除")
-                            .style(serenity::ButtonStyle::Danger),
-                    ])]),
-            )
-            .await?;
-
-        let msg = reply.message().await?;
-        let prefix = format!("{}", ctx_id);
-
-        let Some(press) = msg
-            .await_component_interaction(serenity_ctx)
-            .author_id(author_id)
-            .timeout(std::time::Duration::from_secs(60))
-            .filter(move |m| m.data.custom_id.starts_with(&prefix))
-            .await
-        else {
-            let _ = reply
-                .edit(
-                    ctx,
-                    poise::CreateReply::default()
-                        .embed(
-                            serenity::CreateEmbed::new()
-                                .description("タイムアウトしました。")
-                                .color(colors::WARN),
-                        )
-                        .components(vec![]),
-                )
-                .await;
-            return Ok(());
-        };
-
-        if press.data.custom_id == id("delete") {
-            db::reading_targets::Entity::delete_many()
-                .filter(db::reading_targets::Column::VoiceChannelId.eq(vc_id))
-                .exec(&ctx.data().db)
-                .await?;
-            db::auto_connections::Entity::delete_by_id(vc_id)
-                .exec(&ctx.data().db)
-                .await
-                .ok();
-
-            press
-                .create_response(
-                    serenity_ctx,
-                    serenity::CreateInteractionResponse::UpdateMessage(
-                        serenity::CreateInteractionResponseMessage::new()
-                            .embed(
-                                serenity::CreateEmbed::new()
-                                    .description(format!(
-                                        "{}を自動接続対象から削除しました。",
-                                        channel_mention
-                                    ))
-                                    .color(colors::SUCCEED),
-                            )
-                            .components(vec![]),
-                    ),
-                )
-                .await?;
-        } else {
-            press
-                .create_response(
-                    serenity_ctx,
-                    serenity::CreateInteractionResponse::UpdateMessage(
-                        serenity::CreateInteractionResponseMessage::new()
-                            .embed(
-                                serenity::CreateEmbed::new()
-                                    .description(format!(
-                                        "{}の設定を編集します。設定を入力してください。",
-                                        channel_mention,
-                                    ))
-                                    .color(colors::INFO),
-                            )
-                            .components(config_ui_components(
-                                &id("notify"),
-                                &id("reading"),
-                                &id("save"),
-                                &id("cancel"),
-                            )),
-                    ),
-                )
-                .await?;
-
-            config_ui_loop(
-                serenity_ctx,
-                &msg,
-                author_id,
-                &ctx.data().db,
-                guild_id,
-                vc_id,
-                &channel_mention,
-                ctx_id,
-            )
-            .await?;
-        }
-    } else {
-        let reply = ctx
-            .send(
-                poise::CreateReply::default()
-                    .ephemeral(true)
-                    .embed(
-                        serenity::CreateEmbed::new()
-                            .description(format!(
-                                "{}を自動接続の対象に追加します。設定を入力してください。",
-                                channel_mention
-                            ))
-                            .color(colors::INFO),
-                    )
-                    .components(config_ui_components(
-                        &id("notify"),
-                        &id("reading"),
-                        &id("save"),
-                        &id("cancel"),
-                    )),
-            )
-            .await?;
-
-        let msg = reply.message().await?;
-        config_ui_loop(
-            serenity_ctx,
-            &msg,
-            author_id,
-            &ctx.data().db,
-            guild_id,
-            vc_id,
-            &channel_mention,
-            ctx_id,
-        )
-        .await?;
-    }
-
-    Ok(())
 }

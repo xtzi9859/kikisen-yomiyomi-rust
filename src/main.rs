@@ -72,6 +72,7 @@ async fn main() {
                 commands::server_setting(),
                 commands::server_settings(),
                 commands::server_voice(),
+                commands::server_manager(),
                 commands::bot_whitelist(),
             ],
             prefix_options: poise::PrefixFrameworkOptions {
@@ -108,25 +109,12 @@ async fn main() {
                 let builder = db.get_database_backend();
                 let schema = Schema::new(DbBackend::Sqlite);
 
-                let stmt_guild =
-                    builder.build(&schema.create_table_from_entity(db::guild_settings::Entity));
-                let _ = db.execute(stmt_guild).await;
-
-                let stmt_user =
-                    builder.build(&schema.create_table_from_entity(db::user_settings::Entity));
-                let _ = db.execute(stmt_user).await;
-
-                let stmt_bot_whitelist =
-                    builder.build(&schema.create_table_from_entity(db::bot_whitelist::Entity));
-                let _ = db.execute(stmt_bot_whitelist).await;
-
-                let stmt_auto_connect =
-                    builder.build(&schema.create_table_from_entity(db::auto_connections::Entity));
-                let _ = db.execute(stmt_auto_connect).await;
-
-                let stmt_reading_targets =
-                    builder.build(&schema.create_table_from_entity(db::reading_targets::Entity));
-                let _ = db.execute(stmt_reading_targets).await;
+                let _ = db.execute(builder.build(&schema.create_table_from_entity(db::guild_settings::Entity))).await;
+                let _ = db.execute(builder.build(&schema.create_table_from_entity(db::user_settings::Entity))).await;
+                let _ = db.execute(builder.build(&schema.create_table_from_entity(db::bot_whitelist::Entity))).await;
+                let _ = db.execute(builder.build(&schema.create_table_from_entity(db::auto_connections::Entity))).await;
+                let _ = db.execute(builder.build(&schema.create_table_from_entity(db::reading_targets::Entity))).await;
+                let _ = db.execute(builder.build(&schema.create_table_from_entity(db::server_manager::Entity))).await;
 
                 let synthesizer = Synthesizer::builder(
                     Onnxruntime::load_once()

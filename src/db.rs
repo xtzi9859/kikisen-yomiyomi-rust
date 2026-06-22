@@ -158,3 +158,24 @@ pub mod reading_targets {
 
     impl ActiveModelBehavior for ActiveModel {}
 }
+
+pub mod server_manager {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+    #[sea_orm(table_name = "server_manager")]
+    pub struct Model {
+        #[sea_orm(primary_key, auto_increment = false)]
+        pub guild_id: i64,
+
+        #[sea_orm(primary_key, auto_increment = false)]
+        pub manager_id: i64,
+
+        pub is_role: bool,
+    }
+
+    #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+    pub enum Relation {}
+
+    impl ActiveModelBehavior for ActiveModel {}
+}

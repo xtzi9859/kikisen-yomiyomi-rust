@@ -1,8 +1,10 @@
 use crate::commands::voice_styles::autocomplete_voice_style;
-use crate::helpers::{check_admin_permission, reply_no_permission, upsert_guild_setting};
+use crate::db;
+use crate::helpers::{Pager, check_admin_permission, reply_no_permission, upsert_guild_setting};
 use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 
 const REPLY_PREFIX_TYPES: &[(i32, &str)] = &[
     (0, "なし"),
@@ -38,53 +40,9 @@ const BOOL_SERVER_SETTINGS: &[(&str, &str)] = &[
 
 #[poise::command(
     slash_command,
-    subcommands(
-        "server_admin_permission",
-        "server_reply_type",
-        "server_command_prefix"
-    )
+    subcommands("server_reply_type", "server_command_prefix")
 )]
 pub async fn server_setting(_: Context<'_>) -> Result<(), Error> {
-    Ok(())
-}
-
-#[poise::command(slash_command, rename = "permission")]
-async fn server_admin_permission(
-    ctx: Context<'_>,
-    #[autocomplete = "autocomplete_permission"] permission: String,
-) -> Result<(), Error> {
-    let Some(member) = ctx.author_member().await else {
-        return reply_no_permission(&ctx).await;
-    };
-    let has_permission = ctx
-        .guild()
-        .map(|g| {
-            g.member_permissions(&*member)
-                .contains(serenity::Permissions::MANAGE_GUILD)
-        })
-        .unwrap_or(false);
-    if !has_permission {
-        return reply_no_permission(&ctx).await;
-    }
-
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
-    upsert_guild_setting(ctx.data(), guild_id, |m| {
-        m.admin_permission = Set(permission.clone());
-    })
-    .await?;
-
-    ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
-            serenity::CreateEmbed::new()
-                .description(format!(
-                    "サーバー設定の管理権限を`{}`に設定しました。",
-                    permission
-                ))
-                .color(colors::SUCCEED),
-        ),
-    )
-    .await?;
-
     Ok(())
 }
 
@@ -92,13 +50,15 @@ async fn server_admin_permission(
 #[poise::command(slash_command, rename = "reply_type")]
 async fn server_reply_type(
     ctx: Context<'_>,
-    #[autocomplete = "autocomplete_reply_prefix"]
-    reply_type: i32,
+    #[autocomplete = "autocomplete_reply_prefix"] reply_type: i32,
 ) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.reply_prefix_type = Set(reply_type);
     })
@@ -126,11 +86,13 @@ async fn server_reply_type(
 /// テキストコマンドのプレフィックスを変更する（デフォルトは「!」）
 #[poise::command(slash_command, rename = "command_prefix")]
 async fn server_command_prefix(ctx: Context<'_>, prefix: String) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
 
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.command_prefix = Set(prefix.clone());
     })
@@ -168,9 +130,13 @@ async fn server_speaker_id(
     ctx: Context<'_>,
     #[autocomplete = "autocomplete_voice_style"] style_id: u32,
 ) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
+
     if !ctx
         .data()
         .voice_styles
@@ -190,7 +156,7 @@ async fn server_speaker_id(
         .await?;
         return Ok(());
     }
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
     upsert_guild_setting(ctx.data(), guild_id, |m| {
         m.default_speaker_id = Set(Some(style_id as i32));
     })
@@ -226,10 +192,13 @@ async fn server_voice_speed(
     #[max = 2.0]
     speed: f32,
 ) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_speed = Set(Some(speed));
     })
@@ -258,10 +227,13 @@ async fn server_voice_pitch(
     #[max = 0.15]
     pitch: f32,
 ) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_pitch = Set(Some(pitch));
     })
@@ -289,10 +261,13 @@ async fn server_voice_intonation(
     #[max = 2.0]
     intonation: f32,
 ) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_intonation = Set(Some(intonation));
     })
@@ -315,10 +290,13 @@ async fn server_voice_intonation(
 /// サーバーのデフォルトのボイス設定をリセットする
 #[poise::command(slash_command, rename = "reset")]
 async fn server_voice_reset(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
     upsert_guild_setting(&ctx.data(), guild_id, |m| {
         m.default_speaker_id = Set(None);
         m.default_speed = Set(None);
@@ -345,6 +323,9 @@ pub async fn server_settings(
     #[autocomplete = "autocomplete_server_settings"] setting: String,
     value: bool,
 ) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     if !check_admin_permission(&ctx).await? {
         return reply_no_permission(&ctx).await;
     }
@@ -365,8 +346,6 @@ pub async fn server_settings(
         .await?;
         return Ok(());
     };
-
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
     upsert_guild_setting(&ctx.data(), guild_id, |m| match setting.as_str() {
         "read_embed" => m.read_embed = Set(value),
@@ -405,23 +384,233 @@ pub async fn server_settings(
     Ok(())
 }
 
-async fn autocomplete_permission<'a>(
-    _ctx: Context<'_>,
-    partial: &'a str,
-) -> impl Iterator<Item = serenity::builder::AutocompleteChoice> + 'a {
-    [
-        ("メッセージの管理（manage_messages）", "manage_messages"),
-        ("チャンネルの管理（manage_channels）", "manage_channels"),
-        (
-            "メンバーのタイムアウト（moderate_members）",
-            "moderate_members",
+#[poise::command(
+    slash_command,
+    subcommands("server_manager_add", "server_manager_remove", "server_manager_list",)
+)]
+pub async fn server_manager(_: Context<'_>) -> Result<(), Error> {
+    Ok(())
+}
+
+/// サーバー設定を行えるユーザーまたはロールを追加する
+#[poise::command(slash_command, rename = "add")]
+pub async fn server_manager_add(
+    ctx: Context<'_>,
+    #[description = "サーバー設定の管理者に追加するユーザー"] user: Option<serenity::Member>,
+    #[description = "サーバー設定の管理者に追加するロール"] role: Option<serenity::Role>,
+) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
+        .get() as i64;
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let (manager_id, is_role, manager_name) = match (user, role) {
+        (Some(_), Some(_)) => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("ユーザーとロールは同時には指定できません。どちらか一方のみを指定してください。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+            return Ok(());
+        }
+        (None, None) => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("ユーザーまたはロールのどちらか一方を指定してください。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+            return Ok(());
+        }
+        (Some(m), None) => (m.user.id.get() as i64, false, m.display_name().into()),
+        (None, Some(r)) => (r.id.get() as i64, true, r.name.clone()),
+    };
+
+    let db = &ctx.data().db;
+
+    let existing = db::server_manager::Entity::find()
+        .filter(db::server_manager::Column::GuildId.eq(guild_id))
+        .filter(db::server_manager::Column::ManagerId.eq(manager_id))
+        .one(db)
+        .await?;
+
+    if existing.is_some() {
+        ctx.send(
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("このユーザーまたはロールは既に管理者に追加されています。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
+    db::server_manager::ActiveModel {
+        guild_id: Set(guild_id),
+        manager_id: Set(manager_id),
+        is_role: Set(is_role),
+        ..Default::default()
+    }
+    .insert(db)
+    .await?;
+
+    ctx.send(
+        poise::CreateReply::default().embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "`{}`をサーバー設定の管理者に追加しました。",
+                    manager_name,
+                ))
+                .color(colors::SUCCEED),
         ),
-        ("サーバーの管理（manage_guild）", "manage_guild"),
-        ("管理者（administrator）", "administrator"),
-    ]
-    .into_iter()
-    .filter(move |(label, _)| partial.is_empty() || label.contains(partial))
-    .map(|(label, value)| serenity::builder::AutocompleteChoice::new(label, value))
+    )
+    .await?;
+
+    Ok(())
+}
+
+/// サーバー設定を行えるユーザーまたはロールを削除する
+#[poise::command(slash_command, rename = "remove")]
+pub async fn server_manager_remove(
+    ctx: Context<'_>,
+    #[description = "サーバー設定の管理者から削除するユーザー"] user: Option<serenity::Member>,
+    #[description = "サーバー設定の管理者から削除するロール"] role: Option<serenity::Role>,
+) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
+        .get() as i64;
+    if !check_admin_permission(&ctx).await? {
+        return reply_no_permission(&ctx).await;
+    }
+
+    let (manager_id, _is_role, manager_name) = match (user, role) {
+        (Some(_), Some(_)) => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("ユーザーとロールは同時には指定できません。どちらか一方のみを指定してください。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+            return Ok(());
+        }
+        (None, None) => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("ユーザーまたはロールのどちらか一方を指定してください。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+            return Ok(());
+        }
+        (Some(m), None) => (m.user.id.get() as i64, false, m.display_name().into()),
+        (None, Some(r)) => (r.id.get() as i64, true, r.name.clone()),
+    };
+
+    let db = &ctx.data().db;
+
+    let existing = db::server_manager::Entity::find()
+        .filter(db::server_manager::Column::GuildId.eq(guild_id))
+        .filter(db::server_manager::Column::ManagerId.eq(manager_id))
+        .one(db)
+        .await?;
+
+    let manager_model = match existing {
+        Some(model) => model,
+        None => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("このユーザーまたはロールは管理者ではありません。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+
+            return Ok(());
+        }
+    };
+
+    manager_model.delete(db).await?;
+
+    ctx.send(
+        poise::CreateReply::default().embed(
+            serenity::CreateEmbed::new()
+                .description(format!(
+                    "`{}`をサーバー設定の管理者から削除しました。",
+                    manager_name,
+                ))
+                .color(colors::SUCCEED),
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
+/// サーバー設定を行えるユーザーまたはロールの一覧を表示する
+#[poise::command(slash_command, rename = "list")]
+pub async fn server_manager_list(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
+        .get() as i64;
+    let db = &ctx.data().db;
+    let manager_list = db::server_manager::Entity::find()
+        .filter(db::server_manager::Column::GuildId.eq(guild_id))
+        .all(db)
+        .await?;
+
+    if manager_list.is_empty() {
+        ctx.send(
+            poise::CreateReply::default().embed(
+                serenity::CreateEmbed::new()
+                    .description("サーバー設定の管理者が登録されていません。")
+                    .color(colors::WARN),
+            ),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
+    let mut embeds = Vec::new();
+
+    for chunk in manager_list.chunks(25) {
+        let mut embed = serenity::CreateEmbed::new()
+            .title("サーバー設定管理者一覧")
+            .color(colors::INFO);
+
+        for manager in chunk.iter() {
+            let mention = if manager.is_role {
+                format!("<@&{}>", manager.manager_id)
+            } else {
+                format!("<@{}>", manager.manager_id)
+            };
+
+            embed = embed.field("", mention, true)
+        }
+
+        embeds.push(embed)
+    }
+
+    Pager::new(embeds).run(ctx).await?;
+
+    Ok(())
 }
 
 async fn autocomplete_server_settings<'a>(
