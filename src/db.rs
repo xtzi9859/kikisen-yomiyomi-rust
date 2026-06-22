@@ -9,8 +9,6 @@ pub mod guild_settings {
         #[sea_orm(primary_key, auto_increment = false)]
         pub guild_id: i64,
 
-        pub admin_permission: String,
-
         pub default_speaker_id: Option<i32>,
         pub default_speed: Option<f32>,
         pub default_pitch: Option<f32>,
@@ -45,7 +43,6 @@ pub mod guild_settings {
         pub fn default_for_guild(guild_id: i64) -> Self {
             Self {
                 guild_id,
-                admin_permission: "manage_guild".to_string(),
                 default_speaker_id: None,
                 default_speed: None,
                 default_pitch: None,

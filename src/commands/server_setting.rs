@@ -72,7 +72,7 @@ async fn server_reply_type(
         _ => unreachable!(),
     };
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!("返信形式を`{}`に設定しました。", label))
                 .color(colors::SUCCEED),
@@ -99,7 +99,7 @@ async fn server_command_prefix(ctx: Context<'_>, prefix: String) -> Result<(), E
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!("プレフィックスを`{}`に設定しました。", prefix))
                 .color(colors::SUCCEED),
@@ -144,7 +144,7 @@ async fn server_speaker_id(
         .any(|vs| vs.style_id == style_id)
     {
         ctx.send(
-            poise::CreateReply::default().ephemeral(true).embed(
+            poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
                     .description(format!(
                         "`{}`は存在しません。/voice_stylesで確認してください。",
@@ -170,7 +170,7 @@ async fn server_speaker_id(
         .map(|vs| vs.display_label.as_str())
         .unwrap_or("不明");
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!(
                     "サーバーのデフォルト話者を`{}`に設定しました。",
@@ -205,7 +205,7 @@ async fn server_voice_speed(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!(
                     "サーバーのデフォルト速度を`{:.2}`に設定しました。",
@@ -240,7 +240,7 @@ async fn server_voice_pitch(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!(
                     "サーバーのデフォルト音高を`{:.2}`に設定しました。",
@@ -274,7 +274,7 @@ async fn server_voice_intonation(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!(
                     "サーバーのデフォルト抑揚を`{:.2}`に設定しました。",
@@ -306,7 +306,7 @@ async fn server_voice_reset(ctx: Context<'_>) -> Result<(), Error> {
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description("サーバーのデフォルト音声設定をリセットしました。")
                 .color(colors::SUCCEED),
@@ -337,7 +337,7 @@ pub async fn server_settings(
 
     let Some(label) = label else {
         ctx.send(
-            poise::CreateReply::default().ephemeral(true).embed(
+            poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
                     .description("不明な設定項目です。")
                     .color(colors::ERROR),
@@ -369,7 +369,7 @@ pub async fn server_settings(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!(
                     "**{}**を`{}`に設定しました。",

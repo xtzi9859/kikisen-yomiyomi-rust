@@ -24,7 +24,7 @@ async fn bw_add(
 
     if !bot.bot {
         ctx.send(
-            poise::CreateReply::default().ephemeral(true).embed(
+            poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
                     .description("指定されたユーザーはbotではありません。")
                     .color(colors::ERROR),
@@ -49,7 +49,7 @@ async fn bw_add(
 
     if exists {
         ctx.send(
-            poise::CreateReply::default().ephemeral(true).embed(
+            poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
                     .description(format!("`{}`は既に登録されています。", bot.name))
                     .color(colors::WARN),
@@ -67,7 +67,7 @@ async fn bw_add(
     .await?;
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description(format!("`{}`をホワイトリストに登録しました。", bot.name,))
                 .color(colors::SUCCEED),
@@ -104,7 +104,7 @@ async fn bw_remove(
     match record {
         None => {
             ctx.send(
-                poise::CreateReply::default().ephemeral(true).embed(
+                poise::CreateReply::default().embed(
                     serenity::CreateEmbed::new()
                         .description(format!("`{}`は登録されていません。", bot.name,))
                         .color(colors::WARN),
@@ -115,7 +115,7 @@ async fn bw_remove(
         Some(model) => {
             model.delete(&ctx.data().db).await?;
             ctx.send(
-                poise::CreateReply::default().ephemeral(true).embed(
+                poise::CreateReply::default().embed(
                     serenity::CreateEmbed::new()
                         .description(format!("`{}`をホワイトリストから削除しました。", bot.name))
                         .color(colors::SUCCEED),
@@ -151,7 +151,7 @@ async fn bw_list(ctx: Context<'_>) -> Result<(), Error> {
     };
 
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .title("botホワイトリスト")
                 .description(description)

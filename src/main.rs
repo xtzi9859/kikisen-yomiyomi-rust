@@ -71,6 +71,7 @@ async fn main() {
                 commands::user_setting(),
                 commands::server_setting(),
                 commands::server_settings(),
+                commands::manage_user(),
                 commands::server_voice(),
                 commands::server_manager(),
                 commands::bot_whitelist(),

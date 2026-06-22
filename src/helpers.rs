@@ -111,7 +111,7 @@ pub async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
 
 pub async fn reply_no_permission(ctx: &Context<'_>) -> Result<(), Error> {
     ctx.send(
-        poise::CreateReply::default().ephemeral(true).embed(
+        poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
                 .description("このコマンドを使用する権限がありません。")
                 .color(colors::ERROR),

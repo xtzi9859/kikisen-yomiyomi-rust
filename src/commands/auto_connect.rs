@@ -32,7 +32,6 @@ pub async fn auto_connect(
         let reply = ctx
             .send(
                 poise::CreateReply::default()
-                    .ephemeral(true)
                     .embed(
                         serenity::CreateEmbed::new()
                             .description(format!(
@@ -144,7 +143,6 @@ pub async fn auto_connect(
         let reply = ctx
             .send(
                 poise::CreateReply::default()
-                    .ephemeral(true)
                     .embed(
                         serenity::CreateEmbed::new()
                             .description(format!(
@@ -310,7 +308,6 @@ async fn config_ui_loop(
                         ctx,
                         serenity::CreateInteractionResponse::Message(
                             serenity::CreateInteractionResponseMessage::new()
-                                .ephemeral(true)
                                 .embed(
                                     serenity::CreateEmbed::new()
                                         .description("通知送信チャンネルを選択してください。")
