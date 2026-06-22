@@ -1,6 +1,9 @@
 use crate::db;
 use crate::helpers::get_guild_settings;
-use crate::tts::{SPOILER_REGEX, apply_kanalizer, format_message, play_voicevox, sanitize_text};
+use crate::tts::{
+    SPOILER_REGEX, apply_kanalizer, format_message, play_voicevox, sanitize_text,
+    split_text_for_synthesis,
+};
 use crate::types::{Data, Error};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
@@ -135,18 +138,16 @@ pub async fn on_message(
             })
             .unwrap_or_else(|| new_message.author.name.clone());
 
-        text_to_read = format!("{}のメッセージ {}", display_name, text_to_read);
+        text_to_read = format!("{} {}", display_name, text_to_read);
     }
 
+
     if !text_to_read.is_empty() {
-        play_voicevox(
-            ctx,
-            guild_id,
-            &text_to_read,
-            data,
-            Some(new_message.author.id),
-        )
-        .await?;
+        let segments = split_text_for_synthesis(&text_to_read);
+
+        for segment in segments {
+            play_voicevox(ctx, guild_id, &segment, data, Some(new_message.author.id)).await?;
+        }
     }
 
     Ok(())

@@ -8,29 +8,27 @@ use std::sync::{Arc, LazyLock};
 use tempfile::Builder;
 use unicode_segmentation::UnicodeSegmentation;
 
-const MAX_SYNTHESIS_LENGTH: usize = 200;
+const MAX_SYNTHESIS_LENGTH: usize = 150;
 
 pub(crate) static URL_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"https?://\S+").expect("failed to compile regex url"));
 pub(crate) static CODEBLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?s)```(?P<lang>[^\n\s]*)\s*\n?.*?```").expect("failed to compile regex codeblock")
+    Regex::new(r"(?s)```(?P<lang>[^\n\s]*)\s*\n?.*?```").expect("failed to compile regex: codeblock")
 });
 //pub(crate) static INLINE_CODE_REGEX: LazyLock<Regex> =
 //    LazyLock::new(|| Regex::new(r"`([^`]+)`").expect("failed to compile regex inline-code"));
 pub(crate) static SPOILER_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?s)\|\|(.*?)\|\|").expect("failed to compile regex spoiler"));
+    LazyLock::new(|| Regex::new(r"(?s)\|\|(.*?)\|\|").expect("failed to compile regex: spoiler"));
 pub(crate) static QUOTE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?m)^>{1,3}\s?").expect("failed to compile regex quote"));
-pub(crate) static NEWLINE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\r?\n").expect("failed to compile regex newline"));
+    LazyLock::new(|| Regex::new(r"(?m)^>{1,3}\s?").expect("failed to compile regex: quote"));
 pub(crate) static ROLE_MENTION_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"<@&(\d+)>").expect("failed to compile regex role-mention"));
+    LazyLock::new(|| Regex::new(r"<@&(\d+)>").expect("failed to compile regex: role-mention"));
 pub(crate) static CHANNEL_MENTION_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"<#(\d+)>").expect("failed to compile regex channel-mention"));
+    LazyLock::new(|| Regex::new(r"<#(\d+)>").expect("failed to compile regex: channel-mention"));
 pub(crate) static CUSTOM_EMOJI_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"<a?:(\w+):\d+>").expect("failed to compile regex custom-emoji"));
+    LazyLock::new(|| Regex::new(r"<a?:(\w+):\d+>").expect("failed to compile regex: custom-emoji"));
 pub(crate) static ENGLISH_WORD_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"[a-zA-Z]+").expect("failed to compile regex english"));
+    LazyLock::new(|| Regex::new(r"[a-zA-Z]+").expect("failed to compile regex: english"));
 
 #[derive(Clone)]
 pub struct FileDeleter {
@@ -312,10 +310,7 @@ pub fn sanitize_text(text: &str) -> String {
         .replace_all(&result, "スポイラー")
         .into_owned();
     result = QUOTE_REGEX.replace_all(&result, "引用 ").into_owned();
-    result = URL_REGEX.replace_all(&result, "URL").into_owned();
-    result = NEWLINE_REGEX.replace_all(&result, " ").into_owned();
-
-    result
+    URL_REGEX.replace_all(&result, "URL").into_owned()
 }
 
 /// kanalizerを使用してテキスト中の英単語を一括でかなに変換する
@@ -342,5 +337,17 @@ pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
         .into_owned()
 }
 
-//pub fn split_text_for_synthesis(text: &str, max_length: usize) -> Vec<String> {
-//}
+pub fn split_text_for_synthesis(text: &str) -> Vec<String> {
+    text.split(&['。', '、', '.', ',', '\n', '\r'][..])
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|s| {
+            if s.chars().count() > MAX_SYNTHESIS_LENGTH {
+                let truncated: String = s.chars().take(MAX_SYNTHESIS_LENGTH).collect();
+                format!("{} 省略", truncated)
+            } else {
+                s.to_string()
+            }
+        })
+        .collect()
+}
