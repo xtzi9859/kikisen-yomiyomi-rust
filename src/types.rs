@@ -32,6 +32,7 @@ pub struct VoiceContextInfo {
     pub text_channels: HashSet<serenity::ChannelId>,
 }
 
+#[allow(dead_code)]
 pub struct VoiceStyleInfo {
     pub character_name: String,
     pub style_name: String,

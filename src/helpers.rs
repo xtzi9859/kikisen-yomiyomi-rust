@@ -74,6 +74,7 @@ pub async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
     let mut role_ids = Vec::new();
 
     if let Some(member) = ctx.author_member().await {
+        #[allow(deprecated)]
         let permissions = member.permissions(ctx.cache()).unwrap_or_default();
 
         if permissions.administrator() {
@@ -132,4 +133,27 @@ pub fn get_command_prefix<'a>(
         };
         Ok(Some(prefix))
     })
+}
+
+/// botを除外してVCの現在員を数える
+pub fn count_members_in_vc(
+    ctx: &serenity::Context,
+    guild_id: serenity::GuildId,
+    voice_channel_id: serenity::ChannelId,
+) -> usize {
+    ctx.cache
+    .guild(guild_id)
+    .map(|g| {
+        g.voice_states
+            .values()
+            .filter(|vs| vs.channel_id == Some(voice_channel_id))
+            .filter(|vs| {
+                !g.members
+                    .get(&vs.user_id)
+                    .map(|m| m.user.bot)
+                    .unwrap_or(false)
+            })
+            .count()
+    })
+    .unwrap_or(0)
 }

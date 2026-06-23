@@ -67,6 +67,7 @@ async fn main() {
                 commands::clear(),
                 commands::queue(),
                 commands::tc(),
+                commands::now(),
                 commands::volume(),
                 commands::user_setting(),
                 commands::server_setting(),

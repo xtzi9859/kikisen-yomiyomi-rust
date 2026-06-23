@@ -23,11 +23,13 @@ impl Pager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
 
+    #[allow(dead_code)]
     pub fn ephemeral(mut self, ephemeral: bool) -> Self {
         self.ephemeral = ephemeral;
         self

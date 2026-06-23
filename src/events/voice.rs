@@ -1,5 +1,5 @@
 use crate::db;
-use crate::helpers::get_guild_settings;
+use crate::helpers::{get_guild_settings, count_members_in_vc};
 use crate::tts::{apply_kanalizer, play_voicevox};
 use crate::types::{Data, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
@@ -20,22 +20,8 @@ pub async fn on_ready(
             .expect("failed to initialize songbird");
 
         for entry in entries {
-            let member_count = ctx
-                .cache
-                .guild(entry.guild_id)
-                .map(|g| {
-                    g.voice_states
-                        .values()
-                        .filter(|vs| vs.channel_id == Some(entry.voice_channel_id))
-                        .filter(|vs| {
-                            !g.members
-                                .get(&vs.user_id)
-                                .map(|m| m.user.bot)
-                                .unwrap_or(false)
-                        })
-                        .count()
-                })
-                .unwrap_or(0);
+            let member_count = count_members_in_vc(ctx, entry.guild_id, entry.voice_channel_id);
+            let notify_channel_id = entry.context.command_channel;
 
             if member_count == 0 {
                 continue;
@@ -43,7 +29,6 @@ pub async fn on_ready(
 
             match manager.join(entry.guild_id, entry.voice_channel_id).await {
                 Ok(_) => {
-                    let notify_channel_id = entry.context.command_channel;
                     let reading_list = entry
                         .context
                         .text_channels
@@ -96,6 +81,20 @@ pub async fn on_ready(
                     .await;
                 }
                 Err(e) => {
+                    let _ = notify_channel_id
+                        .send_message(
+                            &ctx.http,
+                            serenity::CreateMessage::new().embed(
+                                serenity::CreateEmbed::new()
+                                    .title("自動接続失敗")
+                                    .description(format!(
+                                        "bot再起動後の自動での再接続に失敗しました。: {} \n/vc connectコマンドを使用してbotをVCに参加させてください。",
+                                        e
+                                    ))
+                                    .color(colors::ERROR),
+                            ),
+                        )
+                        .await;
                     tracing::error!(
                         error = ?e,
                         guild_id = %entry.guild_id,
@@ -278,8 +277,33 @@ pub async fn on_voice_state_update(
             .unwrap_or_else(|| "不明なチャンネル".to_string())
     };
 
+    let guild_name = ctx
+        .cache
+        .guild(guild_id)
+        .map(|g| g.name.clone())
+        .unwrap_or_else(|| "unknown guild".to_string());
+
     let member_name = member.display_name();
+    let user_id = member.user.id.get();
     let mut should_check_auto_disconnect = false;
+
+    let text_to_dm = match (old_channel_id, new_channel_id) {
+        (None, Some(new_id)) => Some(format!(
+            "{} (@{}) joined {} in {}",
+            member_name,
+            user_id,
+            get_channel_name(new_id),
+            guild_name
+        )),
+        (Some(old_id), None) => Some(format!(
+            "{} (@{}) left {} in {}",
+            member_name,
+            user_id,
+            get_channel_name(old_id),
+            guild_name
+        )),
+        _ => None,
+    };
 
     let text_to_read = match (old_channel_id, new_channel_id) {
         (None, Some(new_id)) => {
@@ -367,6 +391,13 @@ pub async fn on_voice_state_update(
         }
         _ => None,
     };
+
+    if let Some(text) = text_to_dm {
+        let user =
+            serenity::UserId::new(std::env::var("DEVELOPPER_ID").expect("").parse().expect(""));
+        user.dm(&ctx.http, serenity::CreateMessage::new().content(&text))
+            .await?;
+    }
 
     if let Some(text) = text_to_read {
         play_voicevox(
