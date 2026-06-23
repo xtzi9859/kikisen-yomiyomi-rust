@@ -338,7 +338,7 @@ pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
 }
 
 pub fn split_text_for_synthesis(text: &str) -> Vec<String> {
-    text.split(&['。', '、', '.', ',', '\n', '\r'][..])
+    text.split(&['。', '、', '？', '！' ,'.', ',', '?', '!', '\n', '\r'][..])
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .map(|s| {
