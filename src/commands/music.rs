@@ -66,6 +66,8 @@ pub async fn play(
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     let manager = songbird::get(ctx.serenity_context())
@@ -331,6 +333,8 @@ pub async fn skip(ctx: Context<'_>, count: Option<u32>) -> Result<(), Error> {
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
@@ -382,6 +386,8 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
             ),
         )
         .await?;
+        
+        return Ok(());
     }
 
     if !vol_input.is_finite() || vol_input < 0.0 || vol_input > 100.0 {
@@ -451,6 +457,8 @@ pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     let manager = songbird::get(ctx.serenity_context())
@@ -525,6 +533,8 @@ pub async fn clear(ctx: Context<'_>) -> Result<(), Error> {
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
@@ -558,6 +568,8 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     let manager = songbird::get(ctx.serenity_context())
@@ -647,6 +659,8 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     let state_arc = get_guild_music_state(ctx.data(), guild_id).await;
@@ -747,6 +761,8 @@ pub async fn now(ctx: Context<'_>) -> Result<(), Error> {
             ),
         )
         .await?;
+
+        return Ok(());
     }
 
     ctx.send(poise::CreateReply::default().embed(

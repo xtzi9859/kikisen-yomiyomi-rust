@@ -1,5 +1,6 @@
 pub mod auto_connect;
 pub mod bot_whitelist;
+pub mod developper;
 pub mod manage_user;
 pub mod misc;
 pub mod music;
@@ -11,6 +12,7 @@ pub mod voice_styles;
 
 pub use auto_connect::auto_connect;
 pub use bot_whitelist::bot_whitelist;
+pub use developper::{dev_save};
 pub use manage_user::manage_user;
 pub use misc::{age, restart};
 pub use music::{play, skip, volume, pause, seek, clear, queue, now};

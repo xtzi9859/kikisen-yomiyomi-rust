@@ -76,6 +76,7 @@ async fn main() {
                 commands::server_voice(),
                 commands::server_manager(),
                 commands::bot_whitelist(),
+                commands::dev_save(),
             ],
             prefix_options: poise::PrefixFrameworkOptions {
                 dynamic_prefix: Some(helpers::get_command_prefix),

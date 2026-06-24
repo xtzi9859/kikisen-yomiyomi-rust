@@ -20,10 +20,9 @@ pub async fn on_ready(
             .expect("failed to initialize songbird");
 
         for entry in entries {
-            let member_count = count_members_in_vc(ctx, entry.guild_id, entry.voice_channel_id);
             let notify_channel_id = entry.context.command_channel;
 
-            if member_count == 0 {
+            if count_members_in_vc(ctx, entry.guild_id, entry.voice_channel_id) == 0 {
                 continue;
             }
 
@@ -167,27 +166,9 @@ pub async fn on_voice_state_update(
                 .flatten();
 
             if let Some(config) = auto_connect_config {
-                let member_count = {
-                    ctx.cache
-                        .guild(guild_id)
-                        .map(|g| {
-                            g.voice_states
-                                .values()
-                                .filter(|vs| vs.channel_id == Some(new_ch))
-                                .filter(|vs| {
-                                    !g.members
-                                        .get(&vs.user_id)
-                                        .map(|m| m.user.bot)
-                                        .unwrap_or(false)
-                                })
-                                .count()
-                        })
-                        .unwrap_or(0)
-                };
-
-                if member_count == 1 {
-                    let notify_id = serenity::ChannelId::new(config.notify_channel_id as u64);
-                    let reading_channels: HashSet<serenity::ChannelId> =
+                if count_members_in_vc(ctx, guild_id, new_ch) == 1 {
+                    let notify_channel_id = serenity::ChannelId::new(config.notify_channel_id as u64);
+                    let reading_target_channels: HashSet<serenity::ChannelId> =
                         db::reading_targets::Entity::find()
                             .filter(
                                 db::reading_targets::Column::VoiceChannelId
@@ -202,7 +183,7 @@ pub async fn on_voice_state_update(
 
                     let _ = manager.join(guild_id, new_ch).await;
 
-                    let reading_list = reading_channels
+                    let reading_list = reading_target_channels
                         .iter()
                         .map(|id| format!("<#{}>", id))
                         .collect::<Vec<_>>()
@@ -211,19 +192,19 @@ pub async fn on_voice_state_update(
                     data.voice_to_text_map.write().await.insert(
                         new_ch,
                         VoiceContextInfo {
-                            command_channel: notify_id,
-                            text_channels: reading_channels,
+                            command_channel: notify_channel_id,
+                            text_channels: reading_target_channels,
                         },
                     );
 
-                    let _ = notify_id
+                    let _ = notify_channel_id
                         .send_message(
                             &ctx.http,
                             serenity::CreateMessage::new().embed(
                                 serenity::CreateEmbed::new()
                                     .title("自動接続")
                                     .description(format!("<#{}>に接続しました", new_ch))
-                                    .field("通知送信チャンネル", format!("<#{}>", notify_id), false)
+                                    .field("通知送信チャンネル", format!("<#{}>", notify_channel_id), false)
                                     .field("読み上げ対象", reading_list, false)
                                     .color(colors::SUCCEED),
                             ),
