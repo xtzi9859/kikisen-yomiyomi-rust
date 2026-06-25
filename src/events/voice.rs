@@ -133,9 +133,13 @@ pub async fn on_voice_state_update(
         if new.channel_id.is_none() {
             if let Some(guild_id) = new.guild_id {
                 if let Some(old_vc) = old.as_ref().and_then(|v| v.channel_id) {
-                    let map = data.voice_to_text_map.read().await;
-                    if let Some(vc_info) = map.get(&old_vc) {
-                        vc_info.command_channel.send_message(
+                    let command_channel = {
+                        let map = data.voice_to_text_map.read().await;
+                        map.get(&old_vc).map(|info| info.command_channel)
+                    };
+
+                    if let Some(ch) = command_channel {
+                        ch.send_message(
                             &ctx.http,
                             serenity::CreateMessage::new().embed(
                                 serenity::CreateEmbed::new()
@@ -152,13 +156,16 @@ pub async fn on_voice_state_update(
                         .expect("failed to initialize songbird");
                     manager.remove(guild_id).await.ok();
                     data.voice_to_text_map.write().await.remove(&old_vc);
+                    data.music_state.write().await.remove(&guild_id);
                 }
             }
         }
         return Ok(());
     }
 
-    let guild_id = new.guild_id.ok_or("guild_id is none")?;
+    let Some(guild_id) = new.guild_id else {
+        return Ok(());
+    };
     let member = guild_id.member(&ctx.http, new.user_id).await?;
 
     let old_channel_id = old.as_ref().and_then(|v| v.channel_id);
@@ -479,26 +486,7 @@ async fn schedule_auto_disconnect(
     let handle = tokio::spawn(async move {
         tokio::time::sleep(Duration::from_secs(5)).await;
 
-        let member_count = ctx_clone
-            .cache
-            .guild(guild_id)
-            .map(|guild| {
-                guild
-                    .voice_states
-                    .values()
-                    .filter(|vs| vs.channel_id == Some(channel_id))
-                    .filter(|vs| {
-                        !guild
-                            .members
-                            .get(&vs.user_id)
-                            .map(|m| m.user.bot)
-                            .unwrap_or(false)
-                    })
-                    .count()
-            })
-            .unwrap_or(0);
-
-        if member_count == 0 {
+        if count_members_in_vc(&ctx_clone, guild_id, channel_id) == 0{
             if let Some(manager) = songbird::get(&ctx_clone).await {
                 manager.remove(guild_id).await.ok();
             }

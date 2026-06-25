@@ -2,43 +2,73 @@ use crate::tts::play_voicevox;
 use crate::types::{Context, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
 
-#[poise::command(slash_command, subcommands("connect"))]
+#[poise::command(slash_command, subcommands("connect", "disconnect"))]
 pub async fn vc(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn join_vc(
-    ctx: Context<'_>,
-    guild_id: serenity::GuildId,
-    channel_id: serenity::ChannelId,
-) -> Result<(), Error> {
+#[poise::command(slash_command)]
+pub async fn disconnect(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+
+    let user_voice_state = ctx
+        .guild()
+        .and_then(|g| g.voice_states.get(&ctx.author().id).cloned());
+    let user_voice_channel_id = match user_voice_state.and_then(|v| v.channel_id) {
+        Some(id) => id,
+        None => {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("botと同じVCに参加していないので、使用できません。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+
+            return Ok(());
+        }
+    };
+
     let manager = songbird::get(ctx.serenity_context())
         .await
-        .expect("failed to initialize songbird");
+        .expect("failed to initialize songbird")
+        .clone();
 
     if let Some(call_lock) = manager.get(guild_id) {
-        let call = call_lock.lock().await;
-        if let Some(old_channel) = call.current_channel() {
-            let old_channel_id = serenity::ChannelId::new(old_channel.0.get());
-            let mut map = ctx.data().voice_to_text_map.write().await;
-            map.remove(&old_channel_id);
+        let current_channel = {
+            let call = call_lock.lock().await;
+            call.current_channel()
+        };
+
+        if current_channel.is_none() {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("botがVCに参加していません。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+
+            return Ok(());
+        } else if current_channel.unwrap() != user_voice_channel_id.into() {
+            ctx.send(
+                poise::CreateReply::default().embed(
+                    serenity::CreateEmbed::new()
+                        .description("botと同じVCに参加していないので、使用できません。")
+                        .color(colors::WARN),
+                ),
+            )
+            .await?;
+
+            return Ok(());
         }
+
+        manager.remove(guild_id).await.ok();
     }
-
-    let _handler = manager.join(guild_id, channel_id).await;
-
-    let mut map = ctx.data().voice_to_text_map.write().await;
-    map.insert(
-        channel_id,
-        VoiceContextInfo {
-            command_channel: ctx.channel_id(),
-            text_channels: std::collections::HashSet::from([ctx.channel_id()]),
-        },
-    );
-
-    let bot_name = ctx.cache().current_user().name.clone();
-    let text = format!("{}が参加しました", bot_name);
-    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data(), None).await?;
 
     Ok(())
 }
@@ -48,7 +78,7 @@ pub async fn join_vc(
 pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
     let guild_id = ctx
         .guild_id()
-        .ok_or("This command is usable only in a guild.")?;
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
     let user_voice_state = ctx
         .guild()
@@ -59,11 +89,12 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
             ctx.send(
                 poise::CreateReply::default().embed(
                     serenity::CreateEmbed::new()
-                        .description("コマンドを使用するにはVCに参加してください。")
+                        .description("このコマンドを使用するには先にVCに参加してください。")
                         .color(colors::WARN),
                 ),
             )
             .await?;
+
             return Ok(());
         }
     };
@@ -154,11 +185,51 @@ pub async fn connect(ctx: Context<'_>) -> Result<(), Error> {
         )
         .field(
             "読み上げ対象",
-            format!("<#{}>", ctx.channel_id().get()),
+            format!(
+                "<#{}> <#{}>",
+                ctx.channel_id().get(),
+                connect_channel_id.get()
+            ),
             false,
         );
 
     ctx.send(poise::CreateReply::default().embed(embed)).await?;
+
+    Ok(())
+}
+
+pub async fn join_vc(
+    ctx: Context<'_>,
+    guild_id: serenity::GuildId,
+    channel_id: serenity::ChannelId,
+) -> Result<(), Error> {
+    let manager = songbird::get(ctx.serenity_context())
+        .await
+        .expect("failed to initialize songbird");
+
+    if let Some(call_lock) = manager.get(guild_id) {
+        let call = call_lock.lock().await;
+        if let Some(old_channel) = call.current_channel() {
+            let old_channel_id = serenity::ChannelId::new(old_channel.0.get());
+            let mut map = ctx.data().voice_to_text_map.write().await;
+            map.remove(&old_channel_id);
+        }
+    }
+
+    let _handler = manager.join(guild_id, channel_id).await;
+
+    let mut map = ctx.data().voice_to_text_map.write().await;
+    map.insert(
+        channel_id,
+        VoiceContextInfo {
+            command_channel: ctx.channel_id(),
+            text_channels: std::collections::HashSet::from([ctx.channel_id(), channel_id]),
+        },
+    );
+
+    let bot_name = ctx.cache().current_user().name.clone();
+    let text = format!("{}が参加しました", bot_name);
+    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data(), None).await?;
 
     Ok(())
 }

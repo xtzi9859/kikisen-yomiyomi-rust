@@ -94,7 +94,25 @@ pub async fn on_message(
             }
         }
         return Ok(());
-    }
+    } else if new_message.content == "cl" {
+        let manager = songbird::get(ctx)
+            .await
+            .expect("failed to initialize songbird");
+
+        if let Some(call_lock) = manager.get(guild_id) {
+            let call = call_lock.lock().await;
+            let queue = call.queue();
+
+            if queue.current().is_some() {
+                queue.stop();
+
+                let reaction = serenity::ReactionType::Unicode("🈳".to_string());
+                if let Err(why) = new_message.react(&ctx.http, reaction).await {
+                    tracing::error!(?why, "failed to add reaction");
+                }
+            }
+        }
+    } 
 
     let mut text_to_read = format_message(new_message, ctx, guild_settings.reply_prefix_type);
 
