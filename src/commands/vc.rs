@@ -226,10 +226,21 @@ pub async fn join_vc(
             text_channels: std::collections::HashSet::from([ctx.channel_id(), channel_id]),
         },
     );
+    ctx.data()
+        .last_clear_executed
+        .write()
+        .await
+        .insert(guild_id, std::time::Instant::now());
 
     let bot_name = ctx.cache().current_user().name.clone();
-    let text = format!("{}が参加しました", bot_name);
-    play_voicevox(ctx.serenity_context(), guild_id, &text, ctx.data(), None).await?;
+    play_voicevox(
+        ctx.serenity_context(),
+        guild_id,
+        &[format!("{}が参加しました", bot_name)],
+        ctx.data(),
+        None,
+    )
+    .await?;
 
     Ok(())
 }

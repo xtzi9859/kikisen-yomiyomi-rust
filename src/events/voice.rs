@@ -61,6 +61,10 @@ pub async fn on_ready(
                         .write()
                         .await
                         .insert(entry.voice_channel_id, entry.context);
+                    data.last_clear_executed
+                        .write()
+                        .await
+                        .insert(entry.guild_id, std::time::Instant::now());
 
                     let mut bot_name = ctx.cache.current_user().name.clone();
                     let current_user_id = ctx.cache.current_user().id;
@@ -73,7 +77,7 @@ pub async fn on_ready(
                     let _ = play_voicevox(
                         ctx,
                         entry.guild_id,
-                        &format!("{}が接続しました", bot_name),
+                        &[format!("{}が接続しました", bot_name)],
                         data,
                         Some(current_user_id),
                     )
@@ -157,6 +161,7 @@ pub async fn on_voice_state_update(
                     manager.remove(guild_id).await.ok();
                     data.voice_to_text_map.write().await.remove(&old_vc);
                     data.music_state.write().await.remove(&guild_id);
+                    data.last_clear_executed.write().await.remove(&guild_id);
                 }
             }
         }
@@ -215,6 +220,10 @@ pub async fn on_voice_state_update(
                             text_channels: reading_target_channels,
                         },
                     );
+                    data.last_clear_executed
+                        .write()
+                        .await
+                        .insert(guild_id, std::time::Instant::now());
 
                     let _ = notify_channel_id
                         .send_message(
@@ -249,7 +258,7 @@ pub async fn on_voice_state_update(
                     let _ = play_voicevox(
                         ctx,
                         guild_id,
-                        &format!("{}が参加しました", bot_name),
+                        &[format!("{}が参加しました", bot_name)],
                         data,
                         None,
                     )
@@ -407,7 +416,7 @@ pub async fn on_voice_state_update(
         play_voicevox(
             ctx,
             guild_id,
-            &apply_kanalizer(&text, &data.kanalizer),
+            &[apply_kanalizer(&text, &data.kanalizer)],
             data,
             Some(new.user_id),
         )
@@ -486,7 +495,7 @@ async fn schedule_auto_disconnect(
     let handle = tokio::spawn(async move {
         tokio::time::sleep(Duration::from_secs(5)).await;
 
-        if count_members_in_vc(&ctx_clone, guild_id, channel_id) == 0{
+        if count_members_in_vc(&ctx_clone, guild_id, channel_id) == 0 {
             if let Some(manager) = songbird::get(&ctx_clone).await {
                 manager.remove(guild_id).await.ok();
             }

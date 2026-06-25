@@ -190,6 +190,7 @@ async fn main() {
                     music_state: Arc::new(RwLock::new(HashMap::new())),
                     kanalizer: kanalizer::Kanalizer::new(),
                     pending_disconnects: Arc::new(RwLock::new(HashMap::new())),
+                    last_clear_executed: Arc::new(RwLock::new(HashMap::new())),
                 })
             })
         })

@@ -49,4 +49,5 @@ pub struct Data {
     pub music_state: Arc<RwLock<HashMap<serenity::GuildId, Arc<RwLock<crate::music::MusicState>>>>>,
     pub kanalizer: kanalizer::Kanalizer,
     pub pending_disconnects: Arc<RwLock<HashMap<serenity::ChannelId, tokio::task::JoinHandle<()>>>>,
+    pub last_clear_executed: Arc<RwLock<HashMap<serenity::GuildId, std::time::Instant>>>,
 }

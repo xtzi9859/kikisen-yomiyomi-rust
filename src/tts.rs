@@ -46,11 +46,16 @@ impl EventHandler for FileDeleter {
 pub async fn play_voicevox(
     ctx: &serenity::Context,
     guild_id: serenity::GuildId,
-    text: &str,
+    text_segments: &[String],
     data: &Data,
     user_id: Option<serenity::UserId>,
 ) -> Result<(), Error> {
+    if text_segments.is_empty() {
+        return Ok(());
+    }
+
     let g_id = guild_id.get() as i64;
+    let called_at = std::time::Instant::now();
 
     let guild_settings = db::guild_settings::Entity::find()
         .filter(db::guild_settings::Column::GuildId.eq(g_id))
@@ -96,47 +101,70 @@ pub async fn play_voicevox(
         .unwrap_or(1.0);
 
     let style_id = voicevox_core::StyleId::new(speaker_id as u32);
-    let mut audio_query = data.synthesizer.create_audio_query(text, style_id).await?;
 
-    audio_query.speed_scale = speed;
-    audio_query.pitch_scale = pitch;
-    audio_query.intonation_scale = intonation;
+    for segment in text_segments {
+        if is_cleared(data, guild_id, called_at).await {
+            return Ok(());
+        }
 
-    let audio_bytes = data
-        .synthesizer
-        .synthesis(&audio_query, style_id)
-        .perform()
-        .await?;
+        let mut audio_query = data.synthesizer.create_audio_query(segment, style_id).await?;
 
-    let temp_file = Builder::new()
-        .prefix("voicevox_")
-        .suffix(".wav")
-        .tempfile()?;
+        audio_query.speed_scale = speed;
+        audio_query.pitch_scale = pitch;
+        audio_query.intonation_scale = intonation;
 
-    let temp_file_path = temp_file.into_temp_path();
-    tokio::fs::write(&temp_file_path, &audio_bytes).await?;
+        let audio_bytes = data
+            .synthesizer
+            .synthesis(&audio_query, style_id)
+            .perform()
+            .await?;
 
-    let manager = songbird::get(ctx)
-        .await
-        .expect("failed to initialize songbird");
-    if let Some(call_lock) = manager.get(guild_id) {
-        let mut call = call_lock.lock().await;
-        let input = songbird::input::File::new(temp_file_path.to_string_lossy().to_string());
-        let handle = call.enqueue_input(input.into()).await;
+        if is_cleared(data, guild_id, called_at).await {
+            return Ok(());
+        }
 
-        let deleter = FileDeleter {
-            _temp_file_path: Arc::new(temp_file_path),
-        };
+        let temp_file = Builder::new()
+            .prefix("voicevox_")
+            .suffix(".wav")
+            .tempfile()?;
+        let temp_file_path = temp_file.into_temp_path();
+        tokio::fs::write(&temp_file_path, &audio_bytes).await?;
 
-        handle
-            .add_event(Event::Track(TrackEvent::End), deleter.clone())
-            .ok();
-        handle
-            .add_event(Event::Track(TrackEvent::Error), deleter)
-            .ok();
+        if is_cleared(data, guild_id, called_at).await {
+            return Ok(());
+        }
+
+        let manager = songbird::get(ctx)
+            .await
+            .expect("failed to initialize songbird");
+        if let Some(call_lock) = manager.get(guild_id) {
+            let mut call = call_lock.lock().await;
+            let input = songbird::input::File::new(temp_file_path.to_string_lossy().to_string());
+            let handle = call.enqueue_input(input.into()).await;
+
+            let deleter = FileDeleter {
+                _temp_file_path: Arc::new(temp_file_path),
+            };
+
+            handle
+                .add_event(Event::Track(TrackEvent::End), deleter.clone())
+                .ok();
+            handle
+                .add_event(Event::Track(TrackEvent::Error), deleter)
+                .ok();
+        }
     }
 
     Ok(())
+}
+
+async fn is_cleared(data: &Data, guild_id: serenity::GuildId, called_at: std::time::Instant) -> bool {
+    data.last_clear_executed
+        .read()
+        .await
+        .get(&guild_id)
+        .map(|&last_cleared_at| called_at < last_cleared_at)
+        .unwrap_or(false)
 }
 
 /// discordのメッセージを読み上げに適した形に整形する

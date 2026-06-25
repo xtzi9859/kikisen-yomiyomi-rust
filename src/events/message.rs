@@ -103,6 +103,9 @@ pub async fn on_message(
             let call = call_lock.lock().await;
             let queue = call.queue();
 
+            data.last_clear_executed.write().await
+                .insert(guild_id, std::time::Instant::now());
+
             if queue.current().is_some() {
                 queue.stop();
 
@@ -112,6 +115,8 @@ pub async fn on_message(
                 }
             }
         }
+
+        return Ok(());
     } 
 
     let mut text_to_read = format_message(new_message, ctx, guild_settings.reply_prefix_type);
@@ -160,11 +165,14 @@ pub async fn on_message(
     }
 
     if !text_to_read.is_empty() {
-        let segments = split_text_for_synthesis(&text_to_read);
-
-        for segment in segments {
-            play_voicevox(ctx, guild_id, &segment, data, Some(new_message.author.id)).await?;
-        }
+        play_voicevox(
+            ctx,
+            guild_id,
+            &split_text_for_synthesis(&text_to_read),
+            data,
+            Some(new_message.author.id)
+        )
+        .await?;
     }
 
     Ok(())
