@@ -148,7 +148,14 @@ impl Pager {
         let select_id = format!("{}pg_select", ctx_id);
 
         let components = self.components_for_page(
-            current_page, total, &first_id, &prev_id, &page_id, &next_id, &last_id, &select_id,
+            current_page,
+            total,
+            &first_id,
+            &prev_id,
+            &page_id,
+            &next_id,
+            &last_id,
+            &select_id,
         );
         let has_components = !components.is_empty();
 
@@ -231,7 +238,14 @@ impl Pager {
             }
 
             let components = self.components_for_page(
-                current_page, total, &first_id, &prev_id, &page_id, &next_id, &last_id, &select_id,
+                current_page,
+                total,
+                &first_id,
+                &prev_id,
+                &page_id,
+                &next_id,
+                &last_id,
+                &select_id,
             );
 
             press

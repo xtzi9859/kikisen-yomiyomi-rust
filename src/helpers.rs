@@ -1,9 +1,9 @@
 use crate::db;
-use crate::types::{Context, DEFAULT_PREFIX, Data, Error, colors, PersistedVoiceEntry};
-use std::path::Path;
-use poise::serenity_prelude as serenity;
-use sea_orm::{ActiveModelTrait, ColumnTrait, Condition,EntityTrait, QueryFilter};
 pub use crate::pager::Pager;
+use crate::types::{Context, DEFAULT_PREFIX, Data, Error, PersistedVoiceEntry, colors};
+use poise::serenity_prelude as serenity;
+use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, EntityTrait, QueryFilter};
+use std::path::Path;
 
 const RESTART_STATE_PATH: &str = "./voice_state.json";
 
@@ -69,7 +69,10 @@ where
 }
 
 pub async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?.get() as i64;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?
+        .get() as i64;
     let user_id = ctx.author().id.get() as i64;
     let mut role_ids = Vec::new();
 
@@ -81,17 +84,20 @@ pub async fn check_admin_permission(ctx: &Context<'_>) -> Result<bool, Error> {
             return Ok(true);
         }
 
-        role_ids = member.roles.iter().map(|role_id| role_id.get() as i64).collect();
+        role_ids = member
+            .roles
+            .iter()
+            .map(|role_id| role_id.get() as i64)
+            .collect();
     }
 
     let db = &ctx.data().db;
 
-    let mut permission_conditions = Condition::any()
-        .add(
-            Condition::all()
-                .add(db::server_manager::Column::ManagerId.eq(user_id))
-                .add(db::server_manager::Column::IsRole.eq(false)),
-        );
+    let mut permission_conditions = Condition::any().add(
+        Condition::all()
+            .add(db::server_manager::Column::ManagerId.eq(user_id))
+            .add(db::server_manager::Column::IsRole.eq(false)),
+    );
 
     if !role_ids.is_empty() {
         permission_conditions = permission_conditions.add(
@@ -142,18 +148,18 @@ pub fn count_members_in_vc(
     voice_channel_id: serenity::ChannelId,
 ) -> usize {
     ctx.cache
-    .guild(guild_id)
-    .map(|g| {
-        g.voice_states
-            .values()
-            .filter(|vs| vs.channel_id == Some(voice_channel_id))
-            .filter(|vs| {
-                !g.members
-                    .get(&vs.user_id)
-                    .map(|m| m.user.bot)
-                    .unwrap_or(false)
-            })
-            .count()
-    })
-    .unwrap_or(0)
+        .guild(guild_id)
+        .map(|g| {
+            g.voice_states
+                .values()
+                .filter(|vs| vs.channel_id == Some(voice_channel_id))
+                .filter(|vs| {
+                    !g.members
+                        .get(&vs.user_id)
+                        .map(|m| m.user.bot)
+                        .unwrap_or(false)
+                })
+                .count()
+        })
+        .unwrap_or(0)
 }

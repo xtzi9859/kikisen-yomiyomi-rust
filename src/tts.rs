@@ -13,7 +13,8 @@ const MAX_SYNTHESIS_LENGTH: usize = 150;
 pub(crate) static URL_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"https?://\S+").expect("failed to compile regex url"));
 pub(crate) static CODEBLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?s)```(?P<lang>[^\n\s]*)\s*\n?.*?```").expect("failed to compile regex: codeblock")
+    Regex::new(r"(?s)```(?P<lang>[^\n\s]*)\s*\n?.*?```")
+        .expect("failed to compile regex: codeblock")
 });
 //pub(crate) static INLINE_CODE_REGEX: LazyLock<Regex> =
 //    LazyLock::new(|| Regex::new(r"`([^`]+)`").expect("failed to compile regex inline-code"));
@@ -338,7 +339,7 @@ pub fn apply_kanalizer(text: &str, kanalizer: &kanalizer::Kanalizer) -> String {
 }
 
 pub fn split_text_for_synthesis(text: &str) -> Vec<String> {
-    text.split(&['。', '、', '？', '！' ,'.', ',', '?', '!', '\n', '\r'][..])
+    text.split(&['。', '、', '？', '！', '.', ',', '?', '!', '\n', '\r'][..])
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .map(|s| {

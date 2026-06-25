@@ -16,7 +16,9 @@ pub async fn auto_connect(
         return reply_no_permission(&ctx).await;
     }
 
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let vc_id = channel.id.get() as i64;
     let ctx_id = ctx.id();
     let serenity_ctx = ctx.serenity_context();
@@ -307,12 +309,11 @@ async fn config_ui_loop(
                     .create_response(
                         ctx,
                         serenity::CreateInteractionResponse::Message(
-                            serenity::CreateInteractionResponseMessage::new()
-                                .embed(
-                                    serenity::CreateEmbed::new()
-                                        .description("通知送信チャンネルを選択してください。")
-                                        .color(colors::WARN),
-                                ),
+                            serenity::CreateInteractionResponseMessage::new().embed(
+                                serenity::CreateEmbed::new()
+                                    .description("通知送信チャンネルを選択してください。")
+                                    .color(colors::WARN),
+                            ),
                         ),
                     )
                     .await?;

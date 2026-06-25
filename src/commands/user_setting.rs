@@ -1,13 +1,20 @@
 use crate::commands::voice_styles::{autocomplete_voice_style, build_voice_style_page_with_select};
-use crate::helpers::Pager;
 use crate::db;
+use crate::helpers::Pager;
 use crate::types::{Context, Error, colors};
 use poise::serenity_prelude as serenity;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 
 #[poise::command(
     slash_command,
-    subcommands("us_speaker", "us_pitch", "us_speed", "us_intonation", "us_reset", "us_show"),
+    subcommands(
+        "us_speaker",
+        "us_pitch",
+        "us_speed",
+        "us_intonation",
+        "us_reset",
+        "us_show"
+    )
 )]
 pub async fn user_setting(_: Context<'_>) -> Result<(), Error> {
     Ok(())
@@ -20,8 +27,7 @@ async fn us_speaker(
     #[description = "話者（空欄で一覧表示）"]
     #[autocomplete = "autocomplete_voice_style"]
     style_id: Option<u32>,
-    #[description = "設定を解除して既定値に戻す"]
-    reset: Option<bool>,
+    #[description = "設定を解除して既定値に戻す"] reset: Option<bool>,
 ) -> Result<(), Error> {
     let guild_id = ctx
         .guild_id()
@@ -48,8 +54,7 @@ async fn us_speaker(
         }
         Some(id)
     } else {
-        let (embeds, select_options) =
-            build_voice_style_page_with_select(&ctx.data().voice_styles);
+        let (embeds, select_options) = build_voice_style_page_with_select(&ctx.data().voice_styles);
 
         if embeds.is_empty() {
             ctx.send(
@@ -245,9 +250,11 @@ async fn us_reset(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 //現在のユーザー設定を表示する
-#[poise::command(slash_command, rename="show")]
-pub async fn us_show (ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+#[poise::command(slash_command, rename = "show")]
+pub async fn us_show(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
     let user_id = ctx.author().id.get() as i64;
 
     let user_settings = db::user_settings::Entity::find()
@@ -256,9 +263,7 @@ pub async fn us_show (ctx: Context<'_>) -> Result<(), Error> {
         .one(&ctx.data().db)
         .await?;
 
-    let speaker_id = user_settings
-        .as_ref()
-        .and_then(|u| u.speaker_id);
+    let speaker_id = user_settings.as_ref().and_then(|u| u.speaker_id);
 
     let speed = match user_settings.as_ref().and_then(|u| u.speed) {
         Some(s) => format!("{:.2}", s),
@@ -308,7 +313,6 @@ pub async fn us_show (ctx: Context<'_>) -> Result<(), Error> {
 
     Ok(())
 }
-
 
 pub async fn upsert_user_setting<F>(
     db: &sea_orm::DatabaseConnection,

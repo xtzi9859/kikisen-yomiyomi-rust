@@ -1,5 +1,5 @@
 use crate::db;
-use crate::helpers::{get_guild_settings, count_members_in_vc};
+use crate::helpers::{count_members_in_vc, get_guild_settings};
 use crate::tts::{apply_kanalizer, play_voicevox};
 use crate::types::{Data, Error, VoiceContextInfo, colors};
 use poise::serenity_prelude as serenity;
@@ -133,6 +133,20 @@ pub async fn on_voice_state_update(
         if new.channel_id.is_none() {
             if let Some(guild_id) = new.guild_id {
                 if let Some(old_vc) = old.as_ref().and_then(|v| v.channel_id) {
+                    let map = data.voice_to_text_map.read().await;
+                    if let Some(vc_info) = map.get(&old_vc) {
+                        vc_info.command_channel.send_message(
+                            &ctx.http,
+                            serenity::CreateMessage::new().embed(
+                                serenity::CreateEmbed::new()
+                                    .title("VCから切断しました")
+                                    .description("ご利用ありがとうございました。\nbotの招待はこちらから: (ここにbotの招待リンクが入る)")
+                                    .color(colors::BOT),
+                            ),
+                        )
+                        .await?;
+                    }
+
                     let manager = songbird::get(ctx)
                         .await
                         .expect("failed to initialize songbird");
@@ -144,10 +158,7 @@ pub async fn on_voice_state_update(
         return Ok(());
     }
 
-    let guild_id = match new.guild_id {
-        Some(id) => id,
-        None => return Ok(()),
-    };
+    let guild_id = new.guild_id.ok_or("guild_id is none")?;
     let member = guild_id.member(&ctx.http, new.user_id).await?;
 
     let old_channel_id = old.as_ref().and_then(|v| v.channel_id);
@@ -167,7 +178,8 @@ pub async fn on_voice_state_update(
 
             if let Some(config) = auto_connect_config {
                 if count_members_in_vc(ctx, guild_id, new_ch) == 1 {
-                    let notify_channel_id = serenity::ChannelId::new(config.notify_channel_id as u64);
+                    let notify_channel_id =
+                        serenity::ChannelId::new(config.notify_channel_id as u64);
                     let reading_target_channels: HashSet<serenity::ChannelId> =
                         db::reading_targets::Entity::find()
                             .filter(
@@ -204,7 +216,11 @@ pub async fn on_voice_state_update(
                                 serenity::CreateEmbed::new()
                                     .title("自動接続")
                                     .description(format!("<#{}>に接続しました", new_ch))
-                                    .field("通知送信チャンネル", format!("<#{}>", notify_channel_id), false)
+                                    .field(
+                                        "通知送信チャンネル",
+                                        format!("<#{}>", notify_channel_id),
+                                        false,
+                                    )
                                     .field("読み上げ対象", reading_list, false)
                                     .color(colors::SUCCEED),
                             ),

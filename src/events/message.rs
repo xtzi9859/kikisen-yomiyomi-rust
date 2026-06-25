@@ -141,7 +141,6 @@ pub async fn on_message(
         text_to_read = format!("{} {}", display_name, text_to_read);
     }
 
-
     if !text_to_read.is_empty() {
         let segments = split_text_for_synthesis(&text_to_read);
 

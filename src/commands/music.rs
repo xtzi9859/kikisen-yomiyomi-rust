@@ -57,7 +57,10 @@ pub async fn play(
         .guild_id()
         .ok_or("このコマンドはサーバー内でのみ実行できます")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -322,9 +325,14 @@ pub async fn play(
 
 #[poise::command(prefix_command, aliases("s"))]
 pub async fn skip(ctx: Context<'_>, count: Option<u32>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -375,9 +383,14 @@ pub async fn skip(ctx: Context<'_>, count: Option<u32>) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("vol"))]
 pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -386,7 +399,7 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
             ),
         )
         .await?;
-        
+
         return Ok(());
     }
 
@@ -446,9 +459,14 @@ pub async fn volume(ctx: Context<'_>, vol_input: f32) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("ps", "resume", "unpause", "toggle", "tg"))]
 pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -522,9 +540,14 @@ pub async fn pause(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command)]
 pub async fn clear(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -557,9 +580,14 @@ pub async fn clear(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command)]
 pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -648,9 +676,14 @@ pub async fn seek(ctx: Context<'_>, input: String) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("q"))]
 pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -734,12 +767,7 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
                 serenity::CreateInteractionResponse::UpdateMessage(
                     serenity::CreateInteractionResponseMessage::new()
                         .embed(queue_embed(&pages, current_page, total_count))
-                        .components(vec![queue_buttons(
-                            &prev_id,
-                            &next_id,
-                            current_page,
-                            total,
-                        )]),
+                        .components(vec![queue_buttons(&prev_id, &next_id, current_page, total)]),
                 ),
             )
             .await?;
@@ -750,9 +778,14 @@ pub async fn queue(ctx: Context<'_>) -> Result<(), Error> {
 
 #[poise::command(prefix_command, aliases("n"))]
 pub async fn now(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().ok_or("このコマンドはサーバー内でのみ実行できます。")?;
+    let guild_id = ctx
+        .guild_id()
+        .ok_or("このコマンドはサーバー内でのみ実行できます。")?;
 
-    if !get_guild_settings(&ctx.data(), guild_id).await.music_enabled {
+    if !get_guild_settings(&ctx.data(), guild_id)
+        .await
+        .music_enabled
+    {
         ctx.send(
             poise::CreateReply::default().embed(
                 serenity::CreateEmbed::new()
@@ -765,10 +798,9 @@ pub async fn now(ctx: Context<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    ctx.send(poise::CreateReply::default().embed(
-        serenity::CreateEmbed::new()
-            .title("Now playing")
-    ))
+    ctx.send(
+        poise::CreateReply::default().embed(serenity::CreateEmbed::new().title("Now playing")),
+    )
     .await?;
 
     Ok(())
@@ -827,7 +859,11 @@ fn build_queue_pages(queue: &VecDeque<MusicItem>) -> Vec<Vec<(String, String)>> 
     pages
 }
 
-fn queue_embed(pages: &[Vec<(String, String)>], page: usize, total_count: usize) -> serenity::CreateEmbed {
+fn queue_embed(
+    pages: &[Vec<(String, String)>],
+    page: usize,
+    total_count: usize,
+) -> serenity::CreateEmbed {
     let mut embed = serenity::CreateEmbed::new()
         .title(format!(
             "再生キュー（{}曲）　ページ {}/{}",
