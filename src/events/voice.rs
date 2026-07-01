@@ -436,29 +436,7 @@ pub async fn on_voice_state_update(
         if let Some(current_channel) = call.current_channel() {
             let channel_id = serenity::ChannelId::new(current_channel.0.get());
 
-            let member_count = {
-                ctx.cache
-                    .guild(guild_id)
-                    .map(|guild| {
-                        guild
-                            .voice_states
-                            .values()
-                            .filter(|vs| {
-                                vs.channel_id.map(|c| c.get()) == Some(current_channel.0.get())
-                            })
-                            .filter(|vs| {
-                                !guild
-                                    .members
-                                    .get(&vs.user_id)
-                                    .map(|m| m.user.bot)
-                                    .unwrap_or(false)
-                            })
-                            .count()
-                    })
-                    .unwrap_or(0)
-            };
-
-            if member_count == 0 {
+            if count_members_in_vc(ctx, guild_id, channel_id) == 0 {
                 drop(call);
                 schedule_auto_disconnect(ctx, data, guild_id, channel_id).await;
             }

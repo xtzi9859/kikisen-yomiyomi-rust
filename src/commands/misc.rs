@@ -67,6 +67,20 @@ pub async fn restart(ctx: Context<'_>) -> Result<(), Error> {
     std::process::exit(0);
 }
 
+/// botの招待リンクを表示する
+#[poise::command(slash_command)]
+pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.send(poise::CreateReply::default().embed(
+        serenity::CreateEmbed::new()
+            .title("聞き専読み読みくんの招待リンク")
+            .description("https://discord.com/oauth2/authorize?client_id=1413693235506839644&permissions=3148800&integration_type=0&scope=bot")
+            .color(colors::INFO)
+    ))
+    .await?;
+
+    Ok(())
+}
+
 /// show age of user executed this command or specified.
 #[poise::command(slash_command)]
 pub async fn age(
@@ -76,5 +90,6 @@ pub async fn age(
     let u = user.as_ref().unwrap_or_else(|| ctx.author());
     let response = format!("{} account was created at {}", u.name, u.created_at());
     ctx.say(response).await?;
+
     Ok(())
 }
